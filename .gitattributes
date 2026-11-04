@@ -1,0 +1,7 @@
+# 文本文件统一用 LF：这台机器的 git 默认 core.autocrlf=true，不写这个文件，每次 add 都会刷一屏换行符警告，
+# 也容易让不同工具写出的 LF / CRLF 混在一起，造成整个文件被判为改动。
+* text=auto eol=lf
+
+# 图片和图标按二进制处理，不做换行符转换，避免被损坏
+*.png binary
+*.ico binary
