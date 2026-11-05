@@ -3,6 +3,9 @@ import { BRANDS } from '@/data/brands';
 import { ARTICLES } from '@/data/articles';
 import { SITE_META } from '@/data/site';
 
+// 静态导出（Cloudflare Pages）要求这类路由声明为静态；普通构建里它本来就是静态的，不受影响
+export const dynamic = 'force-static';
+
 /**
  * 只列入已发布、可索引的页面；草稿指南（published_at 为 null）不进 sitemap，页面本身另设 noindex。
  * lastmod 写页面正文的真实修改日期，不用构建时间：改了正文就手动更新下面的日期。

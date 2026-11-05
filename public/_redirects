@@ -1,0 +1,12 @@
+# Cloudflare Pages 的重定向文件（静态导出用；与 next.config.ts 里的 LEGACY_GUIDE_REDIRECTS 保持一致）
+# 规划阶段用过的旧路径，301 到首选页面；带斜杠和不带斜杠各写一条
+/guides/lingdongyun-plans-and-rules /airports/lingdongyun/ 301
+/guides/lingdongyun-plans-and-rules/ /airports/lingdongyun/ 301
+/guides/twilight-plans-and-rules /airports/twilight/ 301
+/guides/twilight-plans-and-rules/ /airports/twilight/ 301
+/guides/breezenet-plans-and-rules /airports/breezenet/ 301
+/guides/breezenet-plans-and-rules/ /airports/breezenet/ 301
+/guides/verified-coupons-guide /deals/ 301
+/guides/verified-coupons-guide/ /deals/ 301
+/guides/lingdongyun-vs-twilight /compare/lingdongyun-vs-twilight/ 301
+/guides/lingdongyun-vs-twilight/ /compare/lingdongyun-vs-twilight/ 301
