@@ -21,7 +21,7 @@ export const TITLE_TEMPLATE = `%s ｜ ${SITE_META.name}`;
 /** 顶栏社交入口：站长填写完整地址（如 https://t.me/xxx、https://github.com/xxx），留空则图标显示为灰色不可点击 */
 export const SOCIAL_LINKS: { telegram: string; github: string } = {
   telegram: "https://t.me/+okYm1IFBKu8xZWI1",
-  github: ""
+  github: "https://github.com/wongkelvin1995-star/jichang-tj.blog"
 };
 
 /** 顶栏“个人中心”图标的目标：本地版个人中心（收藏、对比、阅读记录，仅保存在当前浏览器） */
