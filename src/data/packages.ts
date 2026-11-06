@@ -1,5 +1,6 @@
 import { PaymentPeriodType, Plan, PlanComparisonRow } from '@/types';
 import { BRANDS } from '@/data/brands';
+import { getBrandTerms } from '@/data/brandTerms';
 import { PRICE_SHEETS, type BrandPriceSheet, type CycleCode, type PriceRow } from '@/data/planPrices';
 import { CYCLE_LABELS, CYCLE_MONTHS, getPriceFacts, type PriceRef } from '@/data/priceFacts';
 import { VERIFICATION } from '@/data/verification';
@@ -7,18 +8,12 @@ import { VERIFICATION } from '@/data/verification';
 /**
  * 机场套餐数据仓库：全部由价格表（planPrices.ts）转换，这里不手写任何价格。
  * 遵循 06-ui-and-data-contract 与 08 模板口径：
- * 1. 倍率、设备数、限速按站长确认的统一口径填写（见下方常量）；退款规则仍为 null，页面显示“未确认”。
+ * 1. 倍率、设备数、限速、退款都照站长机场 MD 里这一家自己的写法（brandTerms.ts），MD 没写的是 null，页面显示“未标注”；
+ *    不再有“全站统一 1 倍率、不限设备、不限速”的口径（站长 2026-11-06：资料都必须跟着 MD）。
  * 2. 严格区分实付总金额（payment_amount）与折算月均单价（calculated_monthly_amount）。
- * 3. 价格与口径由站长在结算页核验（见 verification.ts），status 为 verified，verified_at 为核验日期。
+ * 3. 价格由站长在结算页核验（见 verification.ts），status 为 verified，verified_at 为核验日期。
  */
 
-/**
- * 站长核验的统一口径：全站套餐 1 倍率、不限设备、不限速。
- * 若价格表备注里再出现“最多 N 台”，按资料显示并在核对清单里提示冲突。
- */
-const OWNER_MULTIPLIER = '1 倍率';
-const OWNER_DEVICE_LIMIT = '不限设备';
-const OWNER_SPEED_LIMIT = '不限速';
 const PERIOD_TYPES: Record<CycleCode, PaymentPeriodType> = {
   m: 'monthly',
   q: 'quarterly',
@@ -29,12 +24,13 @@ const PERIOD_TYPES: Record<CycleCode, PaymentPeriodType> = {
   o: 'onetime_traffic_pack'
 };
 
-function pickDeviceLimit(notes: string[]): string {
+/** 价格表备注里写了“限 N 台设备”的档位，按该档位的标注显示（比品牌整体的写法更具体）；否则用 MD 里这一家的设备数写法 */
+function pickDeviceLimit(notes: string[], brandDevices: string | null): string | null {
   for (const note of notes) {
-    const cap = note.match(/最多\s*(\d+)\s*台/);
+    const cap = note.match(/(?:最多|限)\s*(\d+)\s*台/);
     if (cap) return `最多 ${cap[1]} 台（资料标注）`;
   }
-  return OWNER_DEVICE_LIMIT;
+  return brandDevices;
 }
 
 function pickResetRule(notes: string[], isOneTime: boolean): string | null {
@@ -47,6 +43,7 @@ function buildPlan(sheet: BrandPriceSheet, planName: string, rows: PriceRow[], i
   const planId = `plan-${sheet.brandId}-${index + 1}`;
   const isOneTime = rows[0][1] === 'o';
   const notes = [...new Set(rows.flatMap((row) => (row[5] ? [row[5]] : [])))];
+  const terms = getBrandTerms(sheet.brandId);
 
   return {
     id: planId,
@@ -56,11 +53,11 @@ function buildPlan(sheet: BrandPriceSheet, planName: string, rows: PriceRow[], i
     traffic_grant_period: isOneTime ? 'onetime' : 'monthly',
     reset_rule: pickResetRule(notes, isOneTime),
     rollover_rule: notes.some((n) => n.includes('不结转')) ? '未用完不结转（资料标注）' : null,
-    multiplier_rule: OWNER_MULTIPLIER,
+    multiplier_rule: terms.multiplier,
     client_requirements: null,
-    device_limit: pickDeviceLimit(notes),
-    speed_limit: OWNER_SPEED_LIMIT,
-    refund_rule: null,
+    device_limit: pickDeviceLimit(notes, terms.devices),
+    speed_limit: terms.speed,
+    refund_rule: terms.refund,
     verified_at: VERIFICATION.verified_on,
     data_date: sheet.dataDate,
     price_is_historical: sheet.historical === true,

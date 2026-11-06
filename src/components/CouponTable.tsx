@@ -5,13 +5,13 @@ import { COUPONS, COUPONS_PROVIDED_ON } from '@/data/coupons';
 import { Coupon } from '@/types';
 import { ExternalLink, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
 
-function describeConditions(coupon: Coupon): string {
-  const parts = [
-    coupon.discount_value !== null ? `${coupon.discount_value}` : '折扣幅度未提供',
-    coupon.new_customer_only === null ? '首购/续费条件以结算页为准' : coupon.new_customer_only ? '仅限新用户首购' : '新老用户可用',
-    coupon.end_at ? `截止 ${coupon.end_at}` : '有效期以结算页为准'
+/** 折扣与适用条件：折扣幅度和适用、不适用、限制都照 MD 写；MD 没写的写“MD 未写”，有效期等其余条件以结算页为准。 */
+function describeConditions(coupon: Coupon): string[] {
+  return [
+    coupon.discount_value !== null ? `折扣：${coupon.discount_value}` : '折扣幅度：资料未写',
+    ...(coupon.condition_notes ?? []),
+    coupon.end_at ? `截止 ${coupon.end_at}` : '有效期与其余条件以结算页为准'
   ];
-  return parts.join('；');
 }
 
 export default function CouponTable({ compact = false }: { compact?: boolean }) {
@@ -46,7 +46,9 @@ export default function CouponTable({ compact = false }: { compact?: boolean }) 
                 <td className="py-3 px-4 whitespace-nowrap">
                   <code className="font-mono font-bold text-sm text-[#6378EA] select-all">{coupon.coupon_code}</code>
                 </td>
-                <td className="py-3 px-4 text-[#64748B] min-w-[220px]">{describeConditions(coupon)}</td>
+                <td className="py-3 px-4 text-[#64748B] min-w-[220px] space-y-0.5">
+                  {describeConditions(coupon).map((line) => <div key={line}>{line}</div>)}
+                </td>
                 <td className="py-3 px-4 whitespace-nowrap">
                   {coupon.status === 'verified' ? (
                     <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
@@ -84,7 +86,7 @@ export default function CouponTable({ compact = false }: { compact?: boolean }) 
       <div className="p-4 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-start gap-2 text-xs text-[#64748B]">
         <ShieldAlert className="w-4 h-4 text-[#6378EA] shrink-0 mt-0.5" />
         <span>
-          以上优惠码和折扣幅度由站长于 {COUPONS_PROVIDED_ON} 在结算页核验；适用套餐、首购/续费条件与有效期以结算页为准，输入后以实际抵扣金额为准。推广链接里的 code= 是邀请参数，不是优惠码；注册入口为商业链接。
+          以上优惠码、折扣幅度和适用条件照站长提供的资料整理，由站长于 {COUPONS_PROVIDED_ON} 在结算页核验；资料没写的项目就是没写，首购/续费条件与有效期以结算页为准，输入后以实际抵扣金额为准。推广链接里的 code= 是邀请参数，不是优惠码；注册入口为商业链接。
         </span>
       </div>
     </div>

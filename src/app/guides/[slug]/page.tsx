@@ -1,3 +1,4 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -7,8 +8,11 @@ import FavoriteButton from '@/components/account/FavoriteButton';
 import HistoryTracker from '@/components/account/HistoryTracker';
 import { GUIDE_BODIES } from '@/content/guides';
 import { ARTICLES, getArticleBySlug } from '@/data/articles';
+import { getRelatedArticles } from '@/data/articleLinks';
+import { articleHref, getCategory } from '@/data/categories';
 import { SITE_META } from '@/data/site';
 import { buildMetadata } from '@/lib/metadata';
+import type { ArticleCategoryId } from '@/types';
 import {
   Clock,
   HelpCircle,
@@ -36,6 +40,9 @@ function isPublished(slug: string): boolean {
   return Boolean(article && article.published_at !== null && GUIDE_BODIES[slug]);
 }
 
+/** 指南标题取冒号前的短句，相关链接的按钮放得下 */
+const shortTitle = (title: string) => title.split(/[：，]/)[0];
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = getArticleBySlug(slug);
@@ -50,14 +57,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     ...buildMetadata({
       title: article.title,
-      description: `${article.primary_question}${article.conclusion_scope}`,
-      path: `/guides/${article.slug}/`,
+      description: article.meta_description ?? `${article.primary_question}${article.conclusion_scope}`,
+      path: articleHref(article.slug),
       article: article.published_at
         ? { publishedTime: article.published_at, modifiedTime: article.substantive_updated_at }
         : undefined
     }),
     ...(isDraft ? { robots: { index: false, follow: true } } : {}),
   };
+}
+
+/** 页头说明：按分类写，不再把所有文章都写成“通用选购指南” */
+function ScopeNote({ category }: { category: ArticleCategoryId }) {
+  const affiliate = (
+    <>
+      部分品牌入口含推广合作，详见<Link href="/disclosure/" className="text-[#6378EA] font-semibold">推广说明</Link>。
+    </>
+  );
+  switch (category) {
+    case 'buying':
+      return <>本文是通用选购方法指南，不偏袒特定服务商；文中价格来自本站价格表，由{VERIFICATION.label}，之后仍可能调整；本站没有测速数据。{affiliate}</>;
+    case 'speed-lab':
+      return (
+        <>
+          本文讲测试方法和记录方式。本站目前只有站长提供的一份真实检测记录（见<Link href="/speed-lab/" className="text-[#6378EA] font-semibold">测速实验室</Link>），没有别的原始测速数据；没有原始数据的地方写“待更新”，不用模拟数字代替。{affiliate}
+        </>
+      );
+    case 'routes':
+      return <>本文解释线路术语，属于通用知识，不针对某一家服务商；站内品牌页里的线路只是资料标注，本站没有测试过任何线路。{affiliate}</>;
+    default:
+      return <>本文是通用说明，不针对特定服务商；客户端和服务的界面、功能会随版本变化，具体以各项目和服务商的官方说明为准。本站没有逐个测试所有客户端，也不提供安装包。{affiliate}</>;
+  }
 }
 
 export default async function GuideDetailPage({ params }: Props) {
@@ -70,10 +100,17 @@ export default async function GuideDetailPage({ params }: Props) {
 
   const Body = GUIDE_BODIES[slug];
   const published = isPublished(slug);
-  const canonical = `${SITE_META.url}/guides/${article.slug}/`;
+  const canonical = `${SITE_META.url}${articleHref(article.slug)}`;
+  const category = getCategory(article.category);
+  const categoryUrl = `${SITE_META.url}${category.href}`;
+  const related = getRelatedArticles(article);
+  const outgoingHrefs = new Set(article.internal_links.map((l) => l.href));
+  const extraRelated = related.filter((r) => !outgoingHrefs.has(articleHref(r.slug)));
   const jsonLd: object[] = [
     breadcrumbList([
       { name: '首页', url: `${SITE_META.url}/` },
+      { name: '指南', url: `${SITE_META.url}/guides/` },
+      { name: category.name, url: categoryUrl },
       { name: article.title, url: canonical }
     ])
   ];
@@ -82,9 +119,11 @@ export default async function GuideDetailPage({ params }: Props) {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: article.title,
-      description: `${article.primary_question}${article.conclusion_scope}`,
+      description: article.meta_description ?? `${article.primary_question}${article.conclusion_scope}`,
       url: canonical,
       mainEntityOfPage: canonical,
+      articleSection: category.name,
+      image: `${SITE_META.url}/og-default.png`,
       datePublished: article.published_at,
       dateModified: article.substantive_updated_at ?? article.published_at,
       author: { '@type': 'Organization', name: article.author_or_editor },
@@ -99,11 +138,13 @@ export default async function GuideDetailPage({ params }: Props) {
       {jsonLd.map((data, i) => <JsonLd key={i} data={data} />)}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Breadcrumb */}
-        <nav className="text-xs text-[#64748B] mb-6 flex items-center gap-1.5">
+        {/* Breadcrumb：首页 / 指南 / 分类 / 本文，和 BreadcrumbList 结构化数据一致 */}
+        <nav className="text-xs text-[#64748B] mb-6 flex flex-wrap items-center gap-1.5">
           <Link href="/" className="hover:text-[#17233A]">首页</Link>
           <span>/</span>
-          <Link href="/#guides" className="hover:text-[#17233A]">选购指南</Link>
+          <Link href="/guides/" className="hover:text-[#17233A]">指南</Link>
+          <span>/</span>
+          <Link href={category.href} className="hover:text-[#17233A]">{category.name}</Link>
           <span>/</span>
           <span className="text-[#6378EA] font-semibold truncate max-w-xs">{article.title}</span>
         </nav>
@@ -112,9 +153,12 @@ export default async function GuideDetailPage({ params }: Props) {
         <div className="liquid-glass rounded-3xl p-6 sm:p-8 border border-[#CBD5E1] mb-8 space-y-4 shadow-xs">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-bold px-3 py-0.5 rounded-full bg-[#F0F5F9] text-[#6378EA] border border-[#CBD5E1]">
-                通用选购指南 · {article.priority}
-              </span>
+              <Link
+                href={category.href}
+                className="font-bold px-3 py-0.5 rounded-full bg-[#F0F5F9] text-[#6378EA] border border-[#CBD5E1] hover:border-[#6378EA]/40"
+              >
+                {category.name}
+              </Link>
               <span className="text-[#64748B] flex items-center gap-1 font-medium">
                 <Clock className="w-3.5 h-3.5 text-[#6378EA]" />
                 <span>预计阅读：{article.read_time_minutes} 分钟</span>
@@ -143,13 +187,13 @@ export default async function GuideDetailPage({ params }: Props) {
             <FavoriteButton type="article" id={article.slug} />
           </div>
         </div>
-        {published && <HistoryTracker type="article" id={article.slug} title={article.title} href={`/guides/${article.slug}/`} />}
+        {published && <HistoryTracker type="article" id={article.slug} title={article.title} href={articleHref(article.slug)} />}
 
         {/* Scope note */}
         <div className="p-4 rounded-2xl bg-[#F0F5F9] border border-[#CBD5E1] text-xs text-[#475569] leading-relaxed mb-8 flex items-start gap-2">
           <ShieldCheck className="w-4 h-4 text-[#6378EA] shrink-0 mt-0.5" />
           <span>
-            本文是通用选购方法指南，不偏袒特定服务商；文中价格来自本站价格表，由站长核验于 2026-11-03，之后仍可能调整；本站没有测速数据。部分品牌入口含推广合作，详见<Link href="/disclosure/" className="text-[#6378EA] font-semibold">推广说明</Link>。
+            <ScopeNote category={article.category} />
           </span>
         </div>
 
@@ -190,7 +234,7 @@ export default async function GuideDetailPage({ params }: Props) {
           <div className="liquid-glass-card rounded-2xl p-6 border border-[#E2E8F0] space-y-3">
             <h2 className="text-base font-bold text-[#17233A] flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#6378EA]" />
-              <span>相关页面</span>
+              <span>相关教程和工具</span>
             </h2>
             <div className="flex flex-wrap gap-2 pt-1">
               {article.internal_links.map((link) => (
@@ -203,18 +247,28 @@ export default async function GuideDetailPage({ params }: Props) {
                   <ArrowRight className="w-3 h-3" />
                 </Link>
               ))}
+              {extraRelated.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={articleHref(r.slug)}
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#F8FAFC] text-xs font-semibold text-[#6378EA] border border-[#CBD5E1] hover:border-[#6378EA]/40 transition-colors flex items-center gap-1"
+                >
+                  <span>{shortTitle(r.title)}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Back Link */}
         <div className="mt-8 pt-6 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
-          <Link href="/#guides" className="inline-flex items-center gap-1.5 text-[#64748B] hover:text-[#17233A] font-semibold">
+          <Link href={category.href} className="inline-flex items-center gap-1.5 text-[#64748B] hover:text-[#17233A] font-semibold">
             <ArrowLeft className="w-4 h-4" />
-            <span>返回指南专栏</span>
+            <span>返回{category.name}</span>
           </Link>
-          <Link href="/airports/" className="text-[#6378EA] hover:text-[#4F64D6] font-semibold">
-            浏览 34 家机场名录 →
+          <Link href="/guides/" className="text-[#6378EA] hover:text-[#4F64D6] font-semibold">
+            全部指南 →
           </Link>
         </div>
 

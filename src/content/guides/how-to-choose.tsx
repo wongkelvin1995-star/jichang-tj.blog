@@ -1,3 +1,4 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import { H2, P, Ul, Ol, Callout, Table, GuideLink } from '@/components/guide/Prose';
 import { fmtYuan, fmtZhe } from '@/data/format';
@@ -5,14 +6,16 @@ import {
   BRAND_COUNT,
   CHEAPEST_YEARLY,
   CYCLE_COVERAGE,
-  DEVICE_CAP_EXCEPTION,
+  DEVICE_RULES_SUMMARY,
   ENTRY_MONTHLY,
+  MULTIPLIER_RULES_SUMMARY,
   RESET_NOTE_BRAND_COUNT,
   ROWS_WITH_RESET_NOTE,
   discountStats,
   median
 } from '@/data/guideStats';
-import { PLANS } from '@/data/packages';
+import { TERMS_STATS } from '@/data/brandTerms';
+import { CONNECTION_STATS, CONNECTION_SUMMARY } from '@/data/connectionStats';
 
 /**
  * 机场怎么选：五步排除法。
@@ -24,12 +27,11 @@ export default function HowToChoose() {
   const entryHigh = ENTRY_MONTHLY[ENTRY_MONTHLY.length - 1];
   const entryMid = median(ENTRY_MONTHLY.map((e) => e.price));
   const yearlyLow = CHEAPEST_YEARLY[0];
-  const refundCount = PLANS.filter((p) => p.refund_rule !== null).length;
 
   return (
     <>
       <P>
-        选机场最常见的错误，是先看测速截图和折合月价，最后才看规则。更稳妥的顺序正好相反：先定预算和用量，再核对设备、倍率、重置和售后，最后才比价格。本文把这个顺序拆成五步，每一步都是你自己能核对的指标。文中的价格数字来自本站价格表（{BRAND_COUNT} 家，站长核验于 2026-11-03）；速度和稳定性本站没有测试数据，所以不在比较范围内。
+        选机场最常见的错误，是先看测速截图和折合月价，最后才看规则。更稳妥的顺序正好相反：先定预算和用量，再核对设备、倍率、重置和售后，最后才比价格。本文把这个顺序拆成五步，每一步都是你自己能核对的指标。文中的价格数字来自本站价格表（{BRAND_COUNT} 家，{VERIFICATION.label}）；速度和稳定性本站没有测试数据，所以不在比较范围内。
       </P>
       <P>
         五步得出的都是“排除”而不是“推荐”：走完以后剩下的，才值得拿月付去试一个月。
@@ -48,23 +50,23 @@ export default function HowToChoose() {
 
       <H2 id="step-2">第二步：确认客户端和设备数</H2>
       <P>
-        订阅链接只是一份带密钥的节点配置，要导入客户端才能用，见<GuideLink href="/guides/subscription-and-client/">订阅与客户端怎么配</GuideLink>。本站不提供安装包，也没有逐个测试过客户端，下载渠道和支持的订阅格式以服务商后台的教程和客户端项目的官方页面为准。
+        {CONNECTION_SUMMARY}，所以这一步先确认服务商提供你这个系统的官方客户端；订阅链接和通用客户端的原理见<GuideLink href="/guides/subscription-and-client/">订阅与客户端怎么配</GuideLink>。本站不提供安装包，也没有逐个测试过客户端，下载只走服务商官网或后台指向的地址。
       </P>
       <Ul
         items={[
           <><strong>苹果设备：</strong>客户端要从应用商店安装，有的在中国大陆区的商店里搜不到，付款前先确认你能装上。</>,
-          <><strong>电脑和安卓：</strong>多数客户端支持导入通用订阅格式，买之前问清服务商给的是哪种格式，以及客户端是否支持。</>,
-          <><strong>同时在线设备数：</strong>本站按站长核验的口径写“不限设备”{DEVICE_CAP_EXCEPTION ? `，${DEVICE_CAP_EXCEPTION}` : ''}。多设备共用的人，付款前仍要向服务商确认。</>
+          <><strong>电脑和安卓：</strong>到服务商官网确认有对应系统的官方客户端；资料里写明支持 Windows 的有 {CONNECTION_STATS.windows} 家、支持 Android 的有 {CONNECTION_STATS.android} 家，其余没写的，买之前问清。</>,
+          <><strong>同时在线设备数：</strong>各家写法不同：{DEVICE_RULES_SUMMARY}。多设备共用的人，付款前仍要向服务商确认。</>
         ]}
       />
 
       <H2 id="step-3">第三步：核对倍率、重置和结转</H2>
       <P>
-        标称额度不等于能传输的数据量。倍率决定每传输 1GB 扣多少额度：倍率 2 的节点传输 10GB，后台扣 20GB。本站价格表按站长核验的口径是 1 倍率，购买后仍应在节点列表里看一遍每个节点标注的倍率。
+        标称额度不等于能传输的数据量。倍率决定每传输 1GB 扣多少额度：倍率 2 的节点传输 10GB，后台扣 20GB。站长提供的资料里，{MULTIPLIER_RULES_SUMMARY}，购买后仍应在节点列表里看一遍每个节点标注的倍率。
       </P>
       <Ul
         items={[
-          <><strong>重置口径：</strong>额度是“购买日起每 30 天刷新”，还是“每月 1 日统一重置”，决定月末下单的首期能用多久。价格表只在 {ROWS_WITH_RESET_NOTE.length} 个套餐（{RESET_NOTE_BRAND_COUNT} 家）的备注里写了刷新或重置规则，其余没有写明，下单前自己问。</>,
+          <><strong>重置口径：</strong>额度是“购买日起每 30 天刷新”，还是“每月 1 日统一重置”，决定月末下单的首期能用多久。价格表只在 {ROWS_WITH_RESET_NOTE.length} 个套餐（{RESET_NOTE_BRAND_COUNT} 家）的备注里写了刷新或重置规则，其余品牌的流量规则看各品牌页的“品牌资料”，写得不清楚的，下单前自己问。</>,
           <><strong>未用完的额度：</strong>能否结转同样多数没写明，问不到就按“当月清零”准备。一次性流量包不按月清零，但有效期要看清，见<GuideLink href="/guides/occasional-use/">偶尔使用怎么选</GuideLink>。</>
         ]}
       />
@@ -83,7 +85,7 @@ export default function HowToChoose() {
 
       <H2 id="step-5">第五步：看售后和服务条款</H2>
       <P>
-        价格表里写明退款条款的套餐有 {refundCount} 个，所以能不能退、几天内、扣不扣手续费，都要自己去服务条款里找，逐项清单见<GuideLink href="/guides/refund-and-purchase-checklist/">购买前核对清单</GuideLink>。
+        站长提供的资料里，写了退款说明的品牌有 {TERMS_STATS.refundStated} 家，其余没写；即使写了，几天内、扣不扣手续费这些细节也要自己去服务条款里找，逐项清单见<GuideLink href="/guides/refund-and-purchase-checklist/">购买前核对清单</GuideLink>。
       </P>
       <Ul
         items={[

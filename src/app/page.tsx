@@ -1,13 +1,15 @@
 import React from 'react';
 import CelestialHero from '@/components/CelestialHero';
-import NeedsNavigator from '@/components/NeedsNavigator';
+import StartHereSection from '@/components/StartHereSection';
+import GuideHighlights from '@/components/GuideHighlights';
+import HomeFaq from '@/components/HomeFaq';
 import BrandDirectoryGrid from '@/components/BrandDirectoryGrid';
 import PackageComparisonTable from '@/components/PackageComparisonTable';
 import VerifiedDealsSection from '@/components/VerifiedDealsSection';
-import EditorialArticlesSection from '@/components/EditorialArticlesSection';
-import ToolsAndFAQSection from '@/components/ToolsAndFAQSection';
+import ToolsSection from '@/components/ToolsSection';
 import JsonLd from '@/components/JsonLd';
 import { BRANDS } from '@/data/brands';
+import { buildDirectoryBrands } from '@/data/directory';
 import { FAQS } from '@/data/faqs';
 import { getComparisonRows } from '@/data/packages';
 import { SITE_META } from '@/data/site';
@@ -22,7 +24,7 @@ export const metadata = buildMetadata({
 });
 
 export default function HomePage() {
-  // 结构化数据只标注页面上可见的内容：FAQ 手风琴与 34 家目录
+  // 结构化数据只标注页面上可见的内容：FAQ 与 34 家目录
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -51,26 +53,29 @@ export default function HomePage() {
     <div className="relative">
       <JsonLd data={faqJsonLd} />
       <JsonLd data={directoryJsonLd} />
-      {/* Module 1: 简短首屏和灵动旗舰舱 (Sakura Celestial Hero + Lingdong Chamber) */}
+      {/* 首屏：简短介绍和 5 家重点推荐 */}
       <CelestialHero />
 
-      {/* Module 2: 需求入口 (Needs Entrance: 支出/周期/流量包/优惠) */}
-      <NeedsNavigator />
+      {/* 新手入口（三条路径）和六个分类入口 */}
+      <StartHereSection />
 
-      {/* Module 3: 完整34家编辑目录 (Glass Grid with fixed top positions + Registry Order) */}
-      <BrandDirectoryGrid brands={BRANDS} />
+      {/* 热门教程（编辑排序）、最近更新、双品牌对比专题 */}
+      <GuideHighlights />
 
-      {/* Module 4: 套餐与价格比较 (Package & Price Table: Payment amount upfront, clear unknowns) */}
-      <PackageComparisonTable rows={getComparisonRows()} />
+      {/* 常见问题 */}
+      <HomeFaq />
 
-      {/* Module 5: 已核实优惠 (Verified Deals: Strict promo code vs invite code) */}
+      {/* 34 家目录：紧凑小卡，默认前 14 位固定推荐，可搜索和筛选 */}
+      <BrandDirectoryGrid brands={buildDirectoryBrands()} defaultView="fixed" />
+
+      {/* 套餐价格比较（精简版：前 8 家，完整表在 /plans/） */}
+      <PackageComparisonTable rows={getComparisonRows()} variant="compact" limit={8} />
+
+      {/* 优惠码速查（完整表在 /deals/） */}
       <VerifiedDealsSection />
 
-      {/* Module 6: 精选原创文章 (Curated Editorial Articles & Outlines) */}
-      <EditorialArticlesSection />
-
-      {/* Module 7: 工具入口与FAQ (Cost Calculator Preview + Selection FAQ) */}
-      <ToolsAndFAQSection />
+      {/* 工具入口 */}
+      <ToolsSection />
     </div>
   );
 }

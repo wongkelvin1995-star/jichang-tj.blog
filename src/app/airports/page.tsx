@@ -1,7 +1,8 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import type { Metadata } from 'next';
 import BrandDirectoryGrid from '@/components/BrandDirectoryGrid';
-import { BRANDS } from '@/data/brands';
+import { buildDirectoryBrands } from '@/data/directory';
 import { SITE_META } from '@/data/site';
 import { buildMetadata } from '@/lib/metadata';
 import { Info } from 'lucide-react';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = buildMetadata({
   title: '34家机场完整资料目录｜编辑推荐顺序与品牌名录',
-  description: `收录34家机场品牌，前${SITE_META.fixed_editorial_positions}位按固定编辑推荐顺序排列，包含别名、线路标注、入门月付与最低年付价格，以及注册入口。价格由站长核验于 2026-11-03。`,
+  description: `收录34家机场品牌，前${SITE_META.fixed_editorial_positions}位按固定编辑推荐顺序排列，包含别名、线路标注、入门月付与最低年付价格，以及注册入口。价格由${VERIFICATION.label}。`,
   path: '/airports/'
 });
 
@@ -32,7 +33,7 @@ export default function AirportsPage() {
             <div>
               <h1 className="text-xl font-bold text-[#17233A]">34 家机场品牌全景目录</h1>
               <p className="text-xs text-[#64748B] mt-0.5">
-                前 {SITE_META.fixed_editorial_positions} 位固定顺序 · 价格由站长核验于 2026-11-03 · 包含英文别名识别与商业跳转披露
+                前 {SITE_META.fixed_editorial_positions} 位固定顺序 · 价格由{VERIFICATION.label} · 包含英文别名识别与商业跳转披露
               </p>
             </div>
           </div>
@@ -46,7 +47,7 @@ export default function AirportsPage() {
         </div>
       </div>
 
-      <BrandDirectoryGrid brands={BRANDS} />
+      <BrandDirectoryGrid brands={buildDirectoryBrands()} defaultView="all" showHeader={false} />
     </div>
   );
 }

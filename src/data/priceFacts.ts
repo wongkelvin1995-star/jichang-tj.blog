@@ -1,6 +1,6 @@
 import { PRICE_SHEETS, type BrandPriceSheet, type CycleCode, type PriceRow } from '@/data/planPrices';
 import { fmtPerGB, fmtYuan } from '@/data/format';
-import { VERIFICATION } from '@/data/verification';
+import { getBrandTerms } from '@/data/brandTerms';
 
 /**
  * 由价格表算出来的品牌事实（纯计算），页面上的入门月付、最低年付等数字都从这里取。
@@ -104,13 +104,13 @@ export interface DeviceCap {
 }
 
 /**
- * 价格表备注里写明了设备数上限的套餐（按套餐名去重）。
- * 站长的统一口径是不限设备，这些套餐是例外：页面要单独标出来，并提示以结算页为准。
+ * 价格表备注里写明了设备数上限的套餐（按套餐名去重），MD 里写成“限 N 台设备”。
+ * 页面要把这些套餐单独标出来，并提示以结算页为准。
  */
 export function getDeviceCaps(facts: BrandPriceFacts): DeviceCap[] {
   const caps = new Map<string, DeviceCap>();
   facts.rows.forEach((r) => {
-    const match = r.note?.match(/最多\s*(\d+)\s*台/);
+    const match = r.note?.match(/(?:最多|限)\s*(\d+)\s*台/);
     if (match && !caps.has(r.name)) {
       caps.set(r.name, { name: r.name, max: Number(match[1]) });
     }
@@ -175,14 +175,13 @@ export function buildPriceFactLines(facts: BrandPriceFacts): string[] {
   return lines;
 }
 
-/** 品牌页“购买前核对清单”：通用条目加上由这家价格表算出的条目。 */
+/**
+ * 品牌页“购买前核对清单”：只列这一家自己的事项（价格资料日、有没有长周期、设备数上限、退款原话）。
+ * 通用的付款前步骤放在《购买前核对清单》一篇里，品牌页用链接指过去；倍率、设备数、限速的原话在“品牌资料”里，不在这里重复。
+ */
 export function buildPurchaseChecklist(facts: BrandPriceFacts): string[] {
-  const { rows, packs, entryMonthly, dataDate } = facts;
-  const items = [
-    `先到结算页核对当前价格：本页价格整理自 ${dataDate} 的资料，由${VERIFICATION.label}，之后仍可能调整。`,
-    '按实际付款金额比较：季付、半年付、年付要一次付清，折合月价只用于比较，不是每月实际支出。',
-    '看清流量规则：表中“每月 N GB”是资料标注的每月额度；额度何时重置、能否结转，资料没有写明的以服务商说明为准。'
-  ];
+  const { rows } = facts;
+  const items: string[] = [];
 
   const longCycleParts = (['b', 't'] as CycleCode[]).flatMap((cycle) => {
     const prices = rows.filter((r) => r.cycle === cycle).map((r) => r.price);
@@ -191,21 +190,15 @@ export function buildPurchaseChecklist(facts: BrandPriceFacts): string[] {
       : [];
   });
   if (longCycleParts.length > 0) {
-    items.push(`${longCycleParts.join('、')} 都要一次付清，预付越久，承担的套餐变动风险越大。`);
-  }
-
-  if (packs.length > 0 && entryMonthly) {
-    const lo = Math.min(...packs.map((p) => p.perGB));
-    items.push(`一次性流量包每 GB 最低约 ${fmtPerGB(lo)}，是入门月付（约 ${fmtPerGB(entryMonthly.perGB)}/GB）的 ${(lo / entryMonthly.perGB).toFixed(1)} 倍，更适合用量很低或当备用的情况。`);
+    items.push(`${longCycleParts.join('、')} 都要一次付清，第一次建议先用月付确认体验。`);
   }
 
   const deviceCaps = getDeviceCaps(facts);
-  items.push(
-    deviceCaps.length > 0
-      ? `价格表标注了设备上限（${deviceCaps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}），与站长核验的“不限设备”口径不一致，下单前请向服务商确认；倍率与限速按站长口径为 1 倍率、不限速，退款规则未确认。`
-      : '倍率、设备数和限速（1 倍率、不限设备、不限速）为站长核验的统一口径；退款规则各家未公开，请向服务商确认。'
-  );
+  if (deviceCaps.length > 0) {
+    items.push(`${deviceCaps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}：资料标了设备数上限，家里设备多的话先数一数。`);
+  }
 
-  items.push('第一次购买建议先选月付或小额方案，在自己的网络和常用时段实际用一段时间，再决定是否换长周期。');
+  const refund = getBrandTerms(facts.brandId).refund;
+  items.push(refund ? `退款：资料写“${refund}”，具体条件和手续费以服务条款为准。` : '退款：资料没写，先按不可退款准备。');
   return items;
 }

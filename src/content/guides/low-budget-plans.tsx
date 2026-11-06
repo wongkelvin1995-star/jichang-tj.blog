@@ -1,7 +1,8 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import { H2, P, Ul, Callout, Table, BrandLink, GuideLink } from '@/components/guide/Prose';
 import { fmtPerGB, fmtYuan } from '@/data/format';
-import { ALL_ROWS, BRAND_COUNT, median, monthlyRowsUnder, packRowsUnder, yearlyRowsUnder, type BrandRow } from '@/data/guideStats';
+import { ALL_ROWS, BRAND_COUNT, MULTIPLIER_RULES_SUMMARY, median, monthlyRowsUnder, packRowsUnder, yearlyRowsUnder, type BrandRow } from '@/data/guideStats';
 
 const MONTHLY_LIMIT = 15;
 const YEARLY_LIMIT = 100;
@@ -26,7 +27,7 @@ export default function LowBudgetPlans() {
   return (
     <>
       <P>
-        “便宜机场”要先定预算口径：<strong>月预算 {fmtYuan(MONTHLY_LIMIT)} 以内、年预算 {fmtYuan(YEARLY_LIMIT)} 以内、一次性流量包 {fmtYuan(PACK_LIMIT)} 以内</strong>。下面三张表是本站价格表里符合这三个口径的全部档位，按实付金额从低到高，附每月流量和每 GB 单价，妥协点不藏。价格由站长核验于 2026-11-03，之后仍可能调整。
+        “便宜机场”要先定预算口径：<strong>月预算 {fmtYuan(MONTHLY_LIMIT)} 以内、年预算 {fmtYuan(YEARLY_LIMIT)} 以内、一次性流量包 {fmtYuan(PACK_LIMIT)} 以内</strong>。下面三张表是本站价格表里符合这三个口径的全部档位，按实付金额从低到高，附每月流量和每 GB 单价，妥协点不藏。价格由{VERIFICATION.label}，之后仍可能调整。
       </P>
 
       <H2 id="monthly">月付 {fmtYuan(MONTHLY_LIMIT)} 以内（{monthly.length} 档）</H2>
@@ -35,7 +36,7 @@ export default function LowBudgetPlans() {
         rows={monthly.map((r) => [<BrandLink key={`${r.brand.id}-${r.name}`} id={r.brand.id}>{r.brand.name}</BrandLink>, r.name, fmtYuan(r.price), `${r.totalGB}GB`, fmtPerGB(r.perGB), flags(r) || '—'])}
       />
       <P>
-        月付能压到 {fmtYuan(MONTHLY_LIMIT)} 以内的，每月流量在 {monthlyGB.min}–{monthlyGB.max}GB 之间，适合轻度用户试水。{limitedCount > 0 ? `其中有 ${limitedCount} 档标注“限时活动价”，买之前确认活动是否还在。` : ''}
+        月付能压到 {fmtYuan(MONTHLY_LIMIT)} 以内的，每月流量在 {monthlyGB.min}–{monthlyGB.max}GB 之间，适合轻度用户试水。{limitedCount > 0 ? `其中有 ${limitedCount} 档标注“限时开放”，买之前确认活动是否还在。` : ''}
       </P>
 
       <H2 id="yearly">年付 {fmtYuan(YEARLY_LIMIT)} 以内（{yearly.length} 档）</H2>
@@ -85,8 +86,8 @@ export default function LowBudgetPlans() {
         items={[
           `流量少：月付和年付两张表里，每月流量最高 ${Math.max(monthlyGB.max, yearlyGB.max)}GB，常看高清视频的人可能不够用。`,
           `只有年付：上面 ${yearly.length} 档年付里有 ${yearlyOnlyCount} 档在价格表里没有同名的月付档，没法先月付试；这种情况先用同一家的月付档试一个月。`,
-          '限时或学生档：标注“限时活动价”“学生”的，可能有资格或时间限制，以结算页为准。',
-          '价格会变：核验日期是 2026-11-03，服务商随时可能调价或下架，下单前以结算页为准。',
+          '限时或学生档：名称或备注里带“限时”“学生”的，可能有资格或时间限制，以结算页为准。',
+          `价格会变：核验日期是 ${VERIFICATION.verified_on}，服务商随时可能调价或下架，下单前以结算页为准。`,
           <>条款：低价不代表条款宽松，退款、设备、禁用用途仍要按 <GuideLink href="/guides/refund-and-purchase-checklist/">购买前核对清单</GuideLink> 过一遍。</>
         ]}
       />
@@ -102,7 +103,7 @@ export default function LowBudgetPlans() {
       />
 
       <Callout title="本文的边界" tone="warn">
-        三个预算口径是本站设定的比较标准，不是行业定义；表格只收录本站价格表里的 {BRAND_COUNT} 家，不推断未收录品牌。单价按标称流量计算；本站按站长核验的口径显示 1 倍率。
+        三个预算口径是本站设定的比较标准，不是行业定义；表格只收录本站价格表里的 {BRAND_COUNT} 家，不推断未收录品牌。单价按标称流量计算，不按倍率折算（站长提供的资料里，{MULTIPLIER_RULES_SUMMARY}）。
       </Callout>
     </>
   );

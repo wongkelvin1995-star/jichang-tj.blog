@@ -3,32 +3,90 @@ import { fmtYuan } from '@/data/format';
 import { CYCLE_LABELS, getPriceFacts, type BrandPriceFacts } from '@/data/priceFacts';
 
 /**
- * 首屏 5 家重点推荐的优势文案
+ * 首屏 5 家重点推荐
  * 1. 卡片顺序由 position 决定（站长 2026-11-04 指定 FLY V 放第 3 张）；卡片上的“第 N 位”徽章仍读 brands.ts 的 display_rank，两者是两回事。
- * 2. 数字来自价格表 planPrices.ts（站长已在结算页核验）；改价格后要重新核对，scripts/audit_site.mjs 会校验这些比较。
- * 3. “五家中”只比较这 5 家，“34 家”比较全站价格表。
- * 4. advantages 是卡片下方的补充优势（站长 2026-11-04 要求：删掉卡片上的“官网介绍 · 通过本站购买不影响价格”，换成这几家的优势），
- *    只给灵动云、FLY V、隐形人三家写（audit_site.mjs 核对）。条目全部由价格表数出来，不手写数字；品牌自己的说法要标注“资料标注”，
- *    不写没有依据的话，也不写“唯一”“最全”这类排他说法。
+ * 2. headline 和 proof 是手写的一句优势和依据，里面的比较来自价格表 planPrices.ts（站长已在结算页核验）；改价格后要重新核对，
+ *    scripts/audit_site.mjs 会校验这些比较。“五家中”只比较这 5 家，“34 家”比较全站价格表。
+ * 3. 每张卡片下方固定三项（站长 2026-11-06 要求 5 家都一样）：专线、价格推荐、套餐优势，由下面的函数按价格表数出来，不手写数字。
+ *    专线写价格表里的线路备注（品牌层面的标注，本站未测试），不自己改写成“IEPL 专线”：备注写“未注明 IEPL/IPLC”的就照写。
+ *    不写“唯一”“最全”这类排他说法。
  */
+export type FeaturedFactLabel = '专线' | '价格推荐' | '套餐优势';
+export interface FeaturedFact {
+  label: FeaturedFactLabel;
+  text: string;
+}
+
 interface FeaturedPickCopy {
   brand_id: string;
   position: number;
   display_label: string;
   headline: string;
   proof: string;
-  advantages?: (facts: BrandPriceFacts) => string[];
 }
 
-/** 月付到三年付这样的周期跨度，不含一次性流量包。 */
-const cycleSpan = (f: BrandPriceFacts) => {
-  const cycles = f.cycles.filter((c) => c !== 'o');
-  return { text: `${CYCLE_LABELS[cycles[0]]}到${CYCLE_LABELS[cycles[cycles.length - 1]]}`, count: cycles.length };
-};
+const CYCLE_ORDER = ['m', 'q', 'h', 'y', 'b', 't'];
 
-/** 有年付档的套餐名，按年付价从低到高。 */
-const yearlyPlanNames = (f: BrandPriceFacts) =>
-  f.rows.filter((r) => r.cycle === 'y').sort((a, b) => a.price - b.price).map((r) => r.name);
+/** 付款周期：连续的写“月付到三年付都有”，不连续的逐个列出，不暗示没有的周期；只有月付返回 null。 */
+function cycleText(f: BrandPriceFacts): string | null {
+  const cycles = f.cycles.filter((c) => c !== 'o');
+  if (cycles.length <= 1) return null;
+  const contiguous = cycles.every((c, i) => c === CYCLE_ORDER[i]);
+  return contiguous
+    ? `${CYCLE_LABELS[cycles[0]]}到${CYCLE_LABELS[cycles[cycles.length - 1]]}都有`
+    : `${cycles.map((c) => CYCLE_LABELS[c]).join('、')}可选`;
+}
+
+/** 价格表的线路备注就是品牌层面的标注；备注本身以“专线”开头时加“标注为”，避免读成“专线：专线”。 */
+function lineText(f: BrandPriceFacts): string {
+  return f.lineNote.startsWith('专线') ? `标注为${f.lineNote}` : f.lineNote;
+}
+
+/** 价格推荐：入门月付，再加最低年付；没有年付档的品牌改写最大的主力月付档。 */
+function priceText(f: BrandPriceFacts): string {
+  const entry = f.entryMonthly!;
+  const parts = [`入门月付 ${fmtYuan(entry.price)}/月 · ${entry.name} ${entry.totalGB}GB`];
+  if (f.cheapestYearly) {
+    parts.push(`最低年付 ${fmtYuan(f.cheapestYearly.price)}/年 · ${f.cheapestYearly.name}`);
+  } else {
+    const top = f.mainMonthly[f.mainMonthly.length - 1];
+    parts.push(`大流量月付 ${fmtYuan(top.price)}/月 · ${top.name} ${top.totalGB}GB`);
+  }
+  return parts.join('；');
+}
+
+/** 套餐优势：主力月付档数量和跨度、付款周期、一次性流量包（没有流量包的写独享或定制线路）。 */
+function planText(f: BrandPriceFacts, brandName: string): string {
+  const main = f.mainMonthly;
+  // 去掉品牌名前缀和“方案”二字，让“入门方案到商业方案”读作“入门到商业”
+  const tier = (name: string) => name.replace(new RegExp(`^${brandName}\\s*`), '').replace(/方案$/, '');
+  const first = main[0];
+  const last = main[main.length - 1];
+  const parts = [`${tier(first.name)}到${tier(last.name)} ${main.length} 档月付`];
+  parts.push(cycleText(f) ?? `每月 ${first.monthlyGB ?? first.totalGB}GB 到 ${last.monthlyGB ?? last.totalGB}GB`);
+  if (f.packs.length > 0) {
+    const lasting = f.packs.every((p) => p.note?.includes('流量不过期'))
+      ? '流量不过期'
+      : f.packs.every((p) => p.note?.includes('永不过期'))
+        ? '永不过期'
+        : f.packs.every((p) => p.note?.includes('永久有效'))
+          ? '永久有效'
+          : null;
+    parts.push(`另有 ${f.packs.length} 档一次性流量包${lasting ? `（标注${lasting}）` : ''}`);
+  } else if (f.dedicated.length > 0) {
+    parts.push(`另有${f.dedicated[0].name} ${fmtYuan(f.dedicated[0].price)}/月`);
+  }
+  return parts.join('，');
+}
+
+function buildFacts(brandId: string, brandName: string): FeaturedFact[] {
+  const f = getPriceFacts(brandId);
+  return [
+    { label: '专线', text: lineText(f) },
+    { label: '价格推荐', text: priceText(f) },
+    { label: '套餐优势', text: planText(f, brandName) }
+  ];
+}
 
 const FEATURED_COPY: FeaturedPickCopy[] = [
   {
@@ -36,71 +94,42 @@ const FEATURED_COPY: FeaturedPickCopy[] = [
     position: 1,
     display_label: "灵动云",
     headline: "附站长检测记录",
-    proof: "主力档标注不限速、1 倍率；检测记录是 2026-11-01 的一次延迟与解锁检测，不含带宽。",
-    advantages: (f) => {
-      const main = f.mainMonthly;
-      return [
-        f.lineNote,
-        `${main[0].name}到${main[main.length - 1].name} ${main.length} 档月付，${cycleSpan(f).text}都有`,
-        `另有${f.cheapestYearly!.name}年付 ${fmtYuan(f.cheapestYearly!.price)}、${f.packs.length} 档一次性流量包`
-      ];
-    }
+    proof: "资料标注所有套餐不限速、全节点统一 1x 倍率；检测记录是 2026-11-01 的一次延迟与解锁检测，不含带宽。"
   },
   {
     brand_id: "twilight",
     position: 2,
     display_label: "暮光加速",
     headline: "套餐实惠",
-    proof: "基础版 ¥20/月含 120GB，五家中入门实付最低（与灵动云同价，流量更多）。"
+    proof: "基础版入门实付在五家中最低（与灵动云同价，流量更多）。"
   },
   {
     brand_id: "flyv",
     position: 3,
     display_label: "FLY V",
     headline: "多设备更省心",
-    proof: "入门方案 ¥25/月含 150GB，月付档标注不限速、设备不限、1 倍率；另有标注永久有效的单次流量包。",
-    advantages: (f) => {
-      const main = f.mainMonthly;
-      const span = cycleSpan(f);
-      const tier = (name: string) => name.replace('方案', '');
-      return [
-        `${tier(main[0].name)}到${tier(main[main.length - 1].name)} ${main.length} 档月付，${span.text} ${span.count} 个周期`,
-        `${f.cheapestYearly!.name} ${fmtYuan(f.cheapestYearly!.price)}/年，每月 ${f.cheapestYearly!.monthlyGB}GB`,
-        `另有${f.dedicated[0].name} ${fmtYuan(f.dedicated[0].price)}/月`
-      ];
-    }
+    proof: "常规周期套餐设备不限、全节点 1 倍率（资料标注）。"
   },
   {
     brand_id: "invisible",
     position: 4,
     display_label: "隐形人",
     headline: "年付小包单价低",
-    proof: "星耀风暴 ¥109/年，每月 80GB，约 ¥0.114/GB，是 34 家最低价年付档里每 GB 最低的。",
-    advantages: (f) => {
-      const entry = f.entryMonthly!;
-      const otherCycles = f.rows.filter((r) => r.name === entry.name && r.cycle !== 'm').map((r) => CYCLE_LABELS[r.cycle]);
-      const yearly = yearlyPlanNames(f);
-      const neverExpire = f.packs.length > 0 && f.packs.every((p) => p.note?.includes('永不过期'));
-      return [
-        `${entry.name} ${fmtYuan(entry.price)}/月 ${entry.totalGB}GB 起${otherCycles.length > 0 ? `，另有${otherCycles.join('、')}` : ''}`,
-        `年付 ${yearly.length} 档：${yearly[0]}到${yearly[yearly.length - 1]}`,
-        `${f.packs.length} 款一次性买断流量包${neverExpire ? '，标注永不过期' : ''}`
-      ];
-    }
+    proof: "星耀风暴年付档每月 80GB，约 ¥0.114/GB，五家最低价年付档中每 GB 最低（34 家中第 3 低）。"
   },
   {
     brand_id: "wavenet",
     position: 5,
     display_label: "浪网",
     headline: "大流量月付划算",
-    proof: "商业档 ¥200/月含 2000GB，折合 ¥0.10/GB，五家月付大流量档中最低。"
+    proof: "商业档折合 ¥0.10/GB，五家月付大流量档中最低。"
   }
 ];
 
 export const FEATURED_PICKS = FEATURED_COPY
-  .map(({ advantages, ...copy }) => ({
+  .map((copy) => ({
     ...copy,
     brand: BRANDS.find((b) => b.id === copy.brand_id)!,
-    advantages: advantages ? advantages(getPriceFacts(copy.brand_id)) : []
+    advantages: buildFacts(copy.brand_id, copy.display_label)
   }))
   .sort((a, b) => a.position - b.position);

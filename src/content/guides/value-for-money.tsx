@@ -1,14 +1,17 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import { H2, P, Ul, Callout, Table, BrandLink, GuideLink } from '@/components/guide/Prose';
 import { buildBrandAnalysis } from '@/data/brandAnalysis';
+import { TERMS_STATS } from '@/data/brandTerms';
 import { BRANDS } from '@/data/brands';
-import { COUPON_DISCOUNT_LABEL } from '@/data/coupons';
+import { discountSummary } from '@/data/coupons';
 import { fmtPerGB, fmtYuan, fmtZhe } from '@/data/format';
 import {
   BRAND_COUNT,
   CYCLE_COVERAGE,
-  DEVICE_CAP_EXCEPTION,
+  DEVICE_RULES_SUMMARY,
   ENTRY_MONTHLY,
+  MULTIPLIER_RULES_SUMMARY,
   PACK_PER_GB_RANGE,
   ROWS_WITH_RESET_NOTE,
   bestPerGBForBudget,
@@ -56,7 +59,7 @@ export default function ValueForMoney() {
   return (
     <>
       <P>
-        “性价比”不是“最便宜”。一个月 {fmtYuan(entryLow.price)} 的套餐只有 {entryLow.totalGB}GB，对只查资料的人够用，对常看高清视频的人可能不够，反而最不划算。本文把性价比拆成三个能算的因子：<strong>每 GB 单价、流量够不够用、付款风险</strong>，用本站价格表（{BRAND_COUNT} 家，站长核验于 2026-11-03）算出各用量档位和各预算下每 GB 最低的选项，最后列出“便宜翻墙”最常见的坑。
+        “性价比”不是“最便宜”。一个月 {fmtYuan(entryLow.price)} 的套餐只有 {entryLow.totalGB}GB，对只查资料的人够用，对常看高清视频的人可能不够，反而最不划算。本文把性价比拆成三个能算的因子：<strong>每 GB 单价、流量够不够用、付款风险</strong>，用本站价格表（{BRAND_COUNT} 家，{VERIFICATION.label}）算出各用量档位和各预算下每 GB 最低的选项，最后列出“便宜翻墙”最常见的坑。
       </P>
 
       <H2 id="formula">性价比 = 单价 × 够用 × 风险</H2>
@@ -102,7 +105,7 @@ export default function ValueForMoney() {
         rows={ladders.map(({ id, name, analysis }) => [<BrandLink key={id} id={id}>{name}</BrandLink>, analysis.ladderText ?? '价格表只有月付'])}
       />
       <P>
-        全站所有品牌的折扣（折扣 = 实付 ÷（月付 × 月数），同品牌同套餐名比较）：{stepStats.map((s) => statText(s)).join('；')}。周期越长折扣越大，预付的金额也成倍增加，所以<strong>第一次买只买月付，用满一个月确认体验再上年付</strong>；两年付、三年付只在预付金额你完全承受得起损失时才考虑。另外要分清首月价和续费价：有些档位标注“限时活动价”，第二个月可能恢复原价，比较性价比时按续费价算，不按首月价算。
+        全站所有品牌的折扣（折扣 = 实付 ÷（月付 × 月数），同品牌同套餐名比较）：{stepStats.map((s) => statText(s)).join('；')}。周期越长折扣越大，预付的金额也成倍增加，所以<strong>第一次买只买月付，用满一个月确认体验再上年付</strong>；两年付、三年付只在预付金额你完全承受得起损失时才考虑。另外要分清首期价和续费价：名称或备注里带“限时”的档位，可能只在活动期间提供，续费时价格也可能不同，比较性价比时按续费价算，不按首期价算。
       </P>
       <P>
         合起来就是三句话：用量决定档位，档位内比每 GB，再用月付验证一个月后决定要不要预付。<GuideLink href="/tools/plan-finder/">套餐匹配器</GuideLink>就是按这个顺序做的：填用量和预算，它只列出额度够用、单价最低的档位。
@@ -111,9 +114,9 @@ export default function ValueForMoney() {
       <H2 id="rules">第四步：规则不划算，单价再低也白搭</H2>
       <Ul
         items={[
-          <>倍率、设备数、限速：本站按站长核验的口径显示 1 倍率、不限设备、不限速{DEVICE_CAP_EXCEPTION ? `（${DEVICE_CAP_EXCEPTION}）` : ''}；购买后仍在订阅节点列表确认有没有高倍率节点。</>,
-          <>重置与结转：价格表里只有 {ROWS_WITH_RESET_NOTE.length} 个套餐写明了刷新或重置规则，其余没写明，没用完的额度按作废准备，所以档位不要买得远超用量，见 <GuideLink href="/guides/billing-and-traffic-rules/">付款与流量规则</GuideLink>。</>,
-          <>退款：{BRAND_COUNT} 家的价格资料都没有退款条款，付款前自己去服务条款确认，见 <GuideLink href="/guides/refund-and-purchase-checklist/">购买前核对清单</GuideLink>。</>,
+          <>倍率、设备数、限速：各家写法不同——倍率方面，{MULTIPLIER_RULES_SUMMARY}；设备数方面，{DEVICE_RULES_SUMMARY}；限速以各品牌页为准；购买后仍在客户端的节点列表确认有没有高倍率节点。</>,
+          <>重置与结转：价格表备注里写了刷新或重置规则的套餐有 {ROWS_WITH_RESET_NOTE.length} 个，其余品牌的流量规则看各品牌页，没写清楚的按没用完就作废准备，所以档位不要买得远超用量，见 <GuideLink href="/guides/billing-and-traffic-rules/">付款与流量规则</GuideLink>。</>,
+          <>退款：站长提供的资料里只有 {TERMS_STATS.refundStated} 家写了退款说明（大意），具体条款本站没有，付款前自己去服务条款确认，见 <GuideLink href="/guides/refund-and-purchase-checklist/">购买前核对清单</GuideLink>。</>,
           '稳定性：本站没有测速数据，用月付试用一个月来验证，成本就是一个月的钱。'
         ]}
       />
@@ -130,11 +133,11 @@ export default function ValueForMoney() {
 
       <H2 id="commission">关于本站的佣金</H2>
       <P>
-        本站的品牌入口是推广链接，你通过它购买，本站会从服务商那里得到佣金。佣金由服务商承担，<strong>你的购买价格和直接在官网购买完全相同，不会因此多付一分钱</strong>；页面上的优惠码（{COUPON_DISCOUNT_LABEL}）是在此基础上另外抵扣的，抵扣多少以结算页为准。佣金不改变本站写出来的价格和比较结果。
+        本站的品牌入口是推广链接，你通过它购买，本站会从服务商那里得到佣金。佣金由服务商承担，<strong>你的购买价格和直接在官网购买完全相同，不会因此多付一分钱</strong>；页面上的优惠码（折扣各家不同：{discountSummary()}）是在此基础上另外抵扣的，抵扣多少以结算页为准。佣金不改变本站写出来的价格和比较结果。
       </P>
 
       <Callout title="本文的边界" tone="warn">
-        所有单价按标称流量计算，按本站口径 1 倍率；价格由站长核验于 2026-11-03，之后以结算页为准。本站没有测试速度和稳定性，“划算”只指价格与规则，不指体验。预算口径更细的表见 <GuideLink href="/guides/low-budget-plans/">便宜机场怎么比较</GuideLink>。
+        所有单价按标称流量计算，不按倍率折算；价格由站长核验于 2026-11-06，之后以结算页为准。本站没有测试速度和稳定性，“划算”只指价格与规则，不指体验。预算口径更细的表见 <GuideLink href="/guides/low-budget-plans/">便宜机场怎么比较</GuideLink>。
       </Callout>
     </>
   );

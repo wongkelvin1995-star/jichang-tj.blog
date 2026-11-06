@@ -1,18 +1,21 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import JsonLd, { breadcrumbList } from '@/components/JsonLd';
+import { SITE_META } from '@/data/site';
 import { buildMetadata } from '@/lib/metadata';
 import { Info, Mail } from 'lucide-react';
 
 export const metadata: Metadata = buildMetadata({
   title: '关于本站与作者说明',
-  description: '机场推荐博客的定位、编辑背景、真实资料来源与维护机制。坚决不编造作者虚假资历。',
+  description: '了解机场推荐博客的定位、资料来源、更新与纠错机制：价格由站长核验，资料来自站长提供的机场资料，不编造作者资历，不伪造测速和评价。',
   path: '/about/'
 });
 
 export default function AboutPage() {
   return (
     <div className="py-12">
+      <JsonLd data={breadcrumbList([{ name: '首页', url: `${SITE_META.url}/` }, { name: '关于本站', url: `${SITE_META.url}/about/` }])} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb */}

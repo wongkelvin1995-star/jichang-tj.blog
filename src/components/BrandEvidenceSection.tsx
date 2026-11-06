@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ClipboardList } from 'lucide-react';
 import type { BrandTestRecord } from '@/data/brandTests';
+import { getBrandTerms } from '@/data/brandTerms';
 import { fmtYuan } from '@/data/format';
 import type { OfficialSite } from '@/data/officialSites';
 import { CYCLE_LABELS, type BrandPriceFacts, type DeviceCap } from '@/data/priceFacts';
@@ -30,6 +31,7 @@ interface EvidenceRow {
  */
 export default function BrandEvidenceSection({ brand, facts, site, tests, deviceCaps }: Props) {
   const test = tests[0];
+  const terms = getBrandTerms(brand.id);
   const { entryMonthly, cheapestYearly } = facts;
   const priceParts = [
     entryMonthly ? `入门月付：${entryMonthly.name} ${fmtYuan(entryMonthly.price)}/月，每月 ${entryMonthly.totalGB}GB` : null,
@@ -42,8 +44,8 @@ export default function BrandEvidenceSection({ brand, facts, site, tests, device
     (diffCount > 0 ? `有 ${diffCount} 处差异，价格以结算页为准` : '已对照的价格行一致') +
     (site.price_check.not_compared ? `；${site.price_check.not_compared}` : '') +
     '，详见下方官网介绍';
-  const capText = deviceCaps.length > 0 ? `（例外：${deviceCaps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}，以结算页为准）` : '';
-  const blanks = `${test ? '' : '延迟与解锁、'}下载与上传速度、晚高峰表现、长期稳定性、客服响应速度、退款规则`;
+  const capText = deviceCaps.length > 0 ? `（${deviceCaps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}，以结算页为准）` : '';
+  const blanks = `${test ? '' : '延迟与解锁、'}下载与上传速度、晚高峰表现、长期稳定性、客服响应速度${terms.refund ? '' : '、退款规则'}`;
   const altName = site.official_name && site.official_name !== brand.name ? `（${site.official_name}）` : '';
 
   const rows: EvidenceRow[] = [
@@ -58,12 +60,12 @@ export default function BrandEvidenceSection({ brand, facts, site, tests, device
     },
     { item: '价格', fact: priceParts.join('；'), source: priceSource },
     { item: '线路', fact: brand.protocol_architecture || '未标注', source: '资料标注（品牌自述），本站未验证' },
-    { item: '倍率、设备、限速', fact: `1 倍率、不限设备、不限速${capText}`, source: '站长核验的统一口径' },
+    { item: '倍率、设备、限速', fact: `倍率：${terms.multiplier ?? '资料未提供'}；设备：${terms.devices ?? '资料未提供'}${capText}；限速：${terms.speed ?? '资料未提供'}`, source: '站长提供的机场资料（品牌自己的标注），本站未验证' },
     {
       item: '检测记录',
       fact: test ? `${test.tested_at}，${test.network}：${test.title}` : '没有',
       source: test
-        ? `${test.tester}提供；${test.not_covered[0].replace(/。$/, '')}；结果和原图见下方“检测记录”`
+        ? `${test.tester}提供；${test.not_covered[0].replace(/。$/, '')}；${test.image ? '结果和原图见下方“检测记录”' : '结果见下方“检测记录”，原图待更新中'}`
         : `本站没有对${brand.name}做过检测，也没有收到站长提供的检测记录`
     },
     { item: '没有数据的项', fact: blanks, source: '本站没有测试，或资料没有写明；购买前自己核对，见下方“购买前的核对清单”' }

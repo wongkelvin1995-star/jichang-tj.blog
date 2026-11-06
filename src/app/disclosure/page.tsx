@@ -1,18 +1,21 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import JsonLd, { breadcrumbList } from '@/components/JsonLd';
+import { SITE_META } from '@/data/site';
 import { buildMetadata } from '@/lib/metadata';
 import { ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = buildMetadata({
   title: '推广说明与商业合作披露',
-  description: '公开透明披露本站推广返利机制、佣金来源、购买价格一致性声明与第三方链接边界。',
+  description: '说明本站的推广链接怎么工作：佣金由服务商承担、购买价格与官网一致、链接里的 code= 不是优惠码，以及第三方链接的边界。',
   path: '/disclosure/'
 });
 
 export default function DisclosurePage() {
   return (
     <div className="py-12">
+      <JsonLd data={breadcrumbList([{ name: '首页', url: `${SITE_META.url}/` }, { name: '推广说明', url: `${SITE_META.url}/disclosure/` }])} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb */}

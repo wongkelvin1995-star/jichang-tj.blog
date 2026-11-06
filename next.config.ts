@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
 
 if (isStaticExport) {
   nextConfig.output = "export";
-  nextConfig.images = { unoptimized: true }; // 静态导出没有图片优化服务；站内只有一张检测截图
+  nextConfig.images = { unoptimized: true }; // 静态导出没有图片优化服务；检测截图撤下后站内暂时没有图片，设置保留，等新图上传时用
 } else {
   nextConfig.redirects = async () =>
     Object.entries(LEGACY_GUIDE_REDIRECTS).map(([slug, destination]) => ({

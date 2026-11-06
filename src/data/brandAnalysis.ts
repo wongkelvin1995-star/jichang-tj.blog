@@ -1,12 +1,12 @@
 import type { CycleCode } from '@/data/planPrices';
 import { fmtPerGB, fmtYuan } from '@/data/format';
 import { CYCLE_LABELS, CYCLE_MONTHS, getDeviceCaps, getPriceFacts, type BrandPriceFacts } from '@/data/priceFacts';
-import { VERIFICATION } from '@/data/verification';
 import {
   BRAND_COUNT,
   CHEAPEST_PACK,
   CHEAPEST_YEARLY,
   ENTRY_MONTHLY,
+  LONG_CYCLE_BRAND_COUNT,
   rankBy
 } from '@/data/guideStats';
 
@@ -102,7 +102,7 @@ export function buildBrandAnalysis(brandId: string): BrandAnalysis {
   if (cycles.includes('b') || cycles.includes('t')) {
     const longest = cycles.includes('t') ? 't' : 'b';
     const rows = facts.rows.filter((r) => r.cycle === longest);
-    fitFor.push(`愿意预付换单价的人：${CYCLE_LABELS[longest]}最低 ${fmtYuan(Math.min(...rows.map((r) => r.price)))}，这是 ${total} 家里少有的长周期选项。`);
+    fitFor.push(`愿意预付换单价的人：${CYCLE_LABELS[longest]}最低 ${fmtYuan(Math.min(...rows.map((r) => r.price)))}；${total} 家里提供两年付或三年付的有 ${LONG_CYCLE_BRAND_COUNT} 家。`);
   }
   if (packs.length > 0) {
     fitFor.push(`需要备用流量、不想按月续费的人：${packs[0].name} ${fmtYuan(packs[0].price)}/${packs[0].totalGB}GB，用完为止。`);
@@ -123,10 +123,9 @@ export function buildBrandAnalysis(brandId: string): BrandAnalysis {
   if (packs.length === 0) {
     notFitFor.push('想买一次性流量包当备用的人：价格表里没有流量包。');
   }
-  notFitFor.push('需要速度、晚高峰、解锁等实测结论的人：本站没有做过测试，这些只有资料标注。');
+  // 实测、价格核验、资料引用的口径统一放在品牌页的“资料与披露”块里，这里不再每页重复一遍
 
   const limits: string[] = [];
-  limits.push(`价格整理自 ${facts.dataDate} 的资料，由${VERIFICATION.label}；之后是否调价以结算页为准。`);
   if (packs.length > 0 && entryMonthly) {
     const lo = Math.min(...packs.map((p) => p.perGB));
     const hi = Math.max(...packs.map((p) => p.perGB));
@@ -145,11 +144,9 @@ export function buildBrandAnalysis(brandId: string): BrandAnalysis {
   }
   const deviceCaps = getDeviceCaps(facts);
   if (deviceCaps.length > 0) {
-    limits.push(`${deviceCaps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}：套餐详情标了设备数，与站长核验的“不限设备”口径不一致，下单前向服务商确认。`);
-    limits.push('倍率、限速为站长核验的统一口径（1 倍率、不限速），设备数除上面标注的套餐外也按站长口径不限设备；退款规则各家未公开，下单前向服务商确认。');
-  } else {
-    limits.push('倍率、设备数、限速为站长核验的统一口径（1 倍率、不限设备、不限速）；退款规则各家未公开，下单前向服务商确认。');
+    limits.push(`${deviceCaps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}：资料标了设备数上限，下单前向服务商确认。`);
   }
+  // 倍率、设备数、限速、退款的原话在上面的“品牌资料”里逐项列出，不在这里重复
 
   return { ranks, ladder, ladderText, fitFor, notFitFor, limits };
 }

@@ -2,13 +2,13 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import CouponTable from '@/components/CouponTable';
-import { COUPONS, COUPON_DISCOUNT_LABEL } from '@/data/coupons';
+import { COUPONS, discountSummary } from '@/data/coupons';
 import { buildMetadata } from '@/lib/metadata';
 import { Tag, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export const metadata: Metadata = buildMetadata({
   title: '机场优惠码汇总与核验状态',
-  description: `收录站长在结算页核验的 ${COUPONS.length} 个机场优惠码（折扣 ${COUPON_DISCOUNT_LABEL}），逐一注明核验日期。严格区分推广链接里的邀请参数与优惠码，不伪造倒计时。`,
+  description: `收录站长在结算页核验的 ${COUPONS.length} 个机场优惠码（${discountSummary()}），逐一注明核验日期和适用条件。严格区分推广链接里的邀请参数与优惠码，不伪造倒计时。`,
   path: '/deals/'
 });
 
@@ -34,7 +34,7 @@ export default function DealsPage() {
             当前收录的机场优惠码与使用条件
           </h1>
           <p className="text-sm text-[#64748B] mt-2 max-w-2xl leading-relaxed">
-            本页列出站长在结算页核验的优惠码和折扣幅度（{COUPON_DISCOUNT_LABEL}），并逐一注明核验日期；以后新增但还没核验的代码会标为“待核验”。本站不用“限时仅剩1小时”之类的倒计时制造焦虑。
+            本页列出站长在结算页核验的优惠码、折扣幅度和适用条件（折扣各家不同：{discountSummary()}），并逐一注明核验日期；以后新增但还没核验的代码会标为“待核验”。本站不用“限时仅剩1小时”之类的倒计时制造焦虑。
           </p>
         </div>
 

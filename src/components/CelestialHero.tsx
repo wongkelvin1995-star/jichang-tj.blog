@@ -118,7 +118,7 @@ export default function CelestialHero() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-[#17233A] tracking-tight">{lingdongyun.name}</h2>
-                  <p className="text-xs text-[#64748B] mt-0.5 font-medium">Lingdong Cloud · IEPL 专线 + BGP 入口</p>
+                  <p className="text-xs text-[#64748B] mt-0.5 font-medium">Lingdong Cloud</p>
                 </div>
               </div>
 
@@ -231,10 +231,12 @@ export default function CelestialHero() {
                 <div className="text-[11px] text-[#94A3B8] mb-3">{VERIFICATION.label} · 资料日 {pick.brand.data_date}</div>
                 {pick.advantages.length > 0 ? (
                   <ul data-featured-advantages={pick.brand_id} className="mb-4 space-y-1.5">
-                    {pick.advantages.map((text) => (
-                      <li key={text} className="flex items-start gap-1.5 text-[11px] font-medium leading-snug text-[#334155]">
+                    {pick.advantages.map((item) => (
+                      <li key={item.label} className="flex items-start gap-1.5 text-[11px] font-medium leading-snug text-[#334155]">
                         <Check className="w-3 h-3 mt-0.5 shrink-0 text-[#6378EA]" strokeWidth={3} />
-                        <span>{text}</span>
+                        <span>
+                          <strong className="font-bold text-[#17233A]">{item.label}</strong>：{item.text}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -268,7 +270,7 @@ export default function CelestialHero() {
           </div>
 
           <p className="mt-4 text-xs text-[#64748B] leading-relaxed">
-            以上为编辑推荐，含推广合作，排名为固定编辑展示顺序，不是测速或销量结果。价格与规则以各家结算页为准。
+            以上为编辑推荐，含推广合作，排名为固定编辑展示顺序，不是测速或销量结果。专线为资料标注，本站没有测试线路。价格与规则以各家结算页为准。
           </p>
         </div>
       </div>

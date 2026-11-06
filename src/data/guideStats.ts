@@ -1,4 +1,5 @@
 import { BRANDS } from '@/data/brands';
+import { DEVICE_CAP_BRANDS, TERMS_STATS } from '@/data/brandTerms';
 import type { CycleCode } from '@/data/planPrices';
 import { CYCLE_MONTHS, getDeviceCaps, getPriceFacts, type BrandPriceFacts, type PriceRef } from '@/data/priceFacts';
 
@@ -142,18 +143,17 @@ export const PACK_PER_GB_RANGE = (() => {
   return { min: Math.min(...values), max: Math.max(...values) };
 })();
 
-/** 标了设备数上限的套餐：与站长“不限设备”统一口径不一致的例外 */
+/** 价格表备注里标了设备数上限的套餐（MD 写成“限 N 台设备”） */
 export const DEVICE_CAPPED_PLANS = ALL_FACTS.flatMap((f) => getDeviceCaps(f).map((c) => ({ ...c, brand: brandRef(f.brandId) })));
 
-/** 各处写“不限设备”口径时附带的例外说明；价格表里没有这类套餐时为 null */
-export const DEVICE_CAP_EXCEPTION: string | null = (() => {
-  if (DEVICE_CAPPED_PLANS.length === 0) return null;
-  const names = [...new Set(DEVICE_CAPPED_PLANS.map((p) => p.brand.name))].join('、');
-  const maxes = DEVICE_CAPPED_PLANS.map((p) => p.max);
-  const lo = Math.min(...maxes);
-  const hi = Math.max(...maxes);
-  return `例外：${names}有 ${DEVICE_CAPPED_PLANS.length} 个套餐在套餐详情里标了设备数上限，${lo === hi ? `${lo} 台` : `${lo} 到 ${hi} 台`}，以品牌页的套餐表为准`;
-})();
+/** 提供两年付或三年付的品牌数 */
+export const LONG_CYCLE_BRAND_COUNT = ALL_FACTS.filter((f) => f.cycles.includes('b') || f.cycles.includes('t')).length;
+
+/** 设备数各家写法不同：从 MD 数出来的概述，指南里写“设备数”时引用，不再有“全站统一不限设备”的口径 */
+export const DEVICE_RULES_SUMMARY = `${TERMS_STATS.devicesUnlimited} 家的资料写不限设备，${TERMS_STATS.devicesCapped} 家写了设备数上限（${DEVICE_CAP_BRANDS.join('、')}），${TERMS_STATS.devicesBySite} 家写以官网说明为准`;
+
+/** 倍率各家写法不同：从 MD 数出来的概述 */
+export const MULTIPLIER_RULES_SUMMARY = `${TERMS_STATS.multiplierOne} 家的资料写全节点（或常规套餐）1 倍率，${TERMS_STATS.total - TERMS_STATS.multiplierStated} 家没写倍率`;
 
 /** 月付到年付里每 GB 最低的几行（不含两年付、三年付和一次性包） */
 export const LOWEST_PER_GB_REGULAR: BrandRow[] = [...ALL_ROWS]

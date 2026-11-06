@@ -1,5 +1,6 @@
 import React from 'react';
-import { H2, P, Ul, Ol, Callout, Table, Faq } from '@/components/guide/Prose';
+import { H2, P, Ul, Ol, Callout, Table, GuideLink, Faq } from '@/components/guide/Prose';
+import { CONNECTION_SUMMARY } from '@/data/connectionStats';
 
 /**
  * 订阅与客户端：分工、订阅链接的性质、系统代理与 TUN、订阅转换的风险。
@@ -9,8 +10,11 @@ export default function SubscriptionAndClient() {
   return (
     <>
       <P>
-        第一次买机场的人常有一个误解：付完款，设备就能直接出海。实际上服务商给你的是一条“订阅链接”，还需要一个客户端把它导入、选节点、决定哪些流量走代理。本文讲清楚两者的分工、订阅链接为什么要当密码保管、系统代理和 TUN 模式的区别，以及为什么不要把订阅链接交给第三方在线转换。本站没有逐个测试客户端，下载渠道和用法以服务商教程与各项目官方页面为准。
+        第一次买机场的人常有一个误解：付完款，设备就能直接出海。实际上你拿到的是一个账号，还需要一个客户端把流量送出去：多数服务商要求用自己的官方客户端登录，少数提供订阅链接，要导入通用客户端、选节点、决定哪些流量走代理。本文讲清楚两者的分工、订阅链接为什么要当密码保管、系统代理和 TUN 模式的区别，以及为什么不要把订阅链接交给第三方在线转换。本站没有逐个测试客户端，下载渠道和用法以服务商教程与各项目官方页面为准。
       </P>
+      <Callout title="先看你的服务商怎么提供连接方式">
+        {CONNECTION_SUMMARY}。所以下面讲的订阅链接和通用客户端，只适用于服务商确实提供订阅链接的情况；多数情况下，从官网下载官方客户端、用账号登录即可，见<GuideLink href="/guides/first-time-setup/">第一次用机场</GuideLink>。
+      </Callout>
 
       <H2 id="getting-started">买了机场以后怎么用：四步</H2>
       <Ol

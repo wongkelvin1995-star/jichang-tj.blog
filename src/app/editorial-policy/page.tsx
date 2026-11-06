@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import JsonLd, { breadcrumbList } from '@/components/JsonLd';
 import { BRANDS } from '@/data/brands';
 import { SITE_META } from '@/data/site';
 import { buildMetadata } from '@/lib/metadata';
@@ -8,13 +9,14 @@ import { ShieldCheck, Mail } from 'lucide-react';
 
 export const metadata: Metadata = buildMetadata({
   title: '编辑准则与推荐依据说明',
-  description: '详细说明本站34家机场目录的编辑展示次序、测试定义边界、商业推广关系与事实核验标准。',
+  description: '说明本站 34 家机场目录的展示顺序怎么来、测试和资料引用的定义、商业合作关系与事实核验标准，以及出现错误时怎么纠正。',
   path: '/editorial-policy/'
 });
 
 export default function EditorialPolicyPage() {
   return (
     <div className="py-12">
+      <JsonLd data={breadcrumbList([{ name: '首页', url: `${SITE_META.url}/` }, { name: '编辑准则与推荐依据', url: `${SITE_META.url}/editorial-policy/` }])} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb */}

@@ -220,7 +220,7 @@ export default function PlanFinderClient() {
 
         <ul className="text-[11px] text-[#64748B] leading-relaxed space-y-1 list-disc list-outside pl-4">
           <li>价格来自本站价格表，{VERIFICATION.label}；套餐价格或订阅规则如有变动，以官方页面为准。</li>
-          <li>每 GB 按标称流量计算，本站口径 1 倍率、不限设备、不限速；年付按每月发放额度匹配，钱是一次付清的。</li>
+          <li>每 GB 按标称流量计算，不按倍率折算，设备数和限速各家写法不同，见各品牌页；年付按每月发放额度匹配，钱是一次付清的。</li>
           <li>不含一次性流量包和独享定制线路；流量包适合低频备用，见<Link href="/guides/occasional-use/" className="text-[#6378EA] font-semibold">偶尔使用怎么选</Link>和<Link href="/guides/billing-and-traffic-rules/" className="text-[#6378EA] font-semibold">月付年付与重置规则</Link>。</li>
           <li>品牌页里的注册入口是推广链接，你的购买价格与官网相同，佣金由服务商承担，不加价。</li>
         </ul>

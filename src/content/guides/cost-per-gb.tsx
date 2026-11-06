@@ -1,3 +1,4 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import { H2, P, Ul, Ol, Callout, Table, BrandLink, GuideLink, Formula, Faq } from '@/components/guide/Prose';
 import { fmtPerGB, fmtYuan, fmtZhe } from '@/data/format';
@@ -6,6 +7,7 @@ import {
   CHEAPEST_PACK,
   ENTRY_MONTHLY,
   LOWEST_PER_GB_REGULAR,
+  MULTIPLIER_RULES_SUMMARY,
   PACK_PER_GB_RANGE,
   bestPerGBForUsage,
   cheapestCovering,
@@ -45,7 +47,7 @@ export default function CostPerGb() {
   return (
     <>
       <P>
-        “低至每 GB 几分钱”这类宣传，算的是月费除以标称额度，默认你把额度全部用完。真实成本还取决于三件事：你实际用了多少，连的节点倍率是多少，你付的是一个月还是一整年的钱。本文给出对应的公式，并用本站价格表（{BRAND_COUNT} 家，站长核验于 2026-11-03）里的真实档位来演示。
+        “低至每 GB 几分钱”这类宣传，算的是月费除以标称额度，默认你把额度全部用完。真实成本还取决于三件事：你实际用了多少，连的节点倍率是多少，你付的是一个月还是一整年的钱。本文给出对应的公式，并用本站价格表（{BRAND_COUNT} 家，{VERIFICATION.label}）里的真实档位来演示。
       </P>
 
       <H2 id="nominal-cost">名义单价：纸面上的每 GB 价格</H2>
@@ -79,7 +81,7 @@ export default function CostPerGb() {
         items={[
           <><strong>倍率 3：</strong>200GB 的额度只能传输约 66.7GB，真实单价是名义的 3 倍。</>,
           <><strong>倍率 0.5：</strong>200GB 的额度能传输 400GB，真实单价减半。</>,
-          <><strong>混用节点：</strong>按各节点的数据量加权平均，不能直接按 1 倍率估算。例如一半数据量走倍率 1 的节点、一半走倍率 3 的节点，加权平均倍率是 2，200GB 的额度只能传输 100GB。本站价格表按站长核验的口径是 1 倍率，购买后仍要核对节点列表里标注的倍率。</>
+          <><strong>混用节点：</strong>按各节点的数据量加权平均，不能直接按 1 倍率估算。例如一半数据量走倍率 1 的节点、一半走倍率 3 的节点，加权平均倍率是 2，200GB 的额度只能传输 100GB。站长提供的资料里，{MULTIPLIER_RULES_SUMMARY}，购买后仍要核对节点列表里标注的倍率。</>
         ]}
       />
 
@@ -136,7 +138,7 @@ export default function CostPerGb() {
           },
           {
             q: '倍率是 1 就不用管了吗？',
-            a: '本站价格表按站长核验的口径是 1 倍率，但节点列表里可能有倍率不同的节点。连接前看一眼，倍率高的节点每传输 1GB 扣的额度更多，会更快用完。'
+            a: `站长提供的资料里，${MULTIPLIER_RULES_SUMMARY}；但节点列表里可能有倍率不同的节点。连接前看一眼，倍率高的节点每传输 1GB 扣的额度更多，会更快用完。`
           },
           {
             q: '文章和计算器是什么关系？',

@@ -4,6 +4,7 @@ import React, { useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ARTICLES } from '@/data/articles';
 import { BRANDS } from '@/data/brands';
+import { getBrandTerms } from '@/data/brandTerms';
 import { getCouponsByBrandId } from '@/data/coupons';
 import { fmtPerGB, fmtYuan } from '@/data/format';
 import { CYCLE_LABELS, getDeviceCaps, getPriceFacts } from '@/data/priceFacts';
@@ -573,9 +574,8 @@ function CompareSection({
                   ['线路资料', facts.map((f) => f.lineNote)],
                   ['倍率 / 设备 / 限速', facts.map((f) => {
                     const caps = getDeviceCaps(f);
-                    return caps.length > 0
-                      ? `1 倍率、不限速；设备数按站长口径不限，但${caps.map((c) => `${c.name}标了最多 ${c.max} 台`).join('、')}，以结算页为准`
-                      : '1 倍率、不限设备、不限速（站长核验口径）';
+                    const t = getBrandTerms(f.brandId);
+                    return `倍率：${t.multiplier ?? '资料未提供'}；设备：${t.devices ?? '资料未提供'}${caps.length > 0 ? `（${caps.map((c) => `${c.name}最多 ${c.max} 台`).join('、')}，以结算页为准）` : ''}；限速：${t.speed ?? '资料未提供'}`;
                   })],
                   ['优惠码', brands.map((b) => { const c = getCouponsByBrandId(b.id)[0]; return c?.coupon_code ? `${c.coupon_code}（${c.discount_value}）` : '无'; })],
                   ['价格资料日 / 核验', facts.map((f) => `${f.dataDate} / ${VERIFICATION.verified_on}`)],

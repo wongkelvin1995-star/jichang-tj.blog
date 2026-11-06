@@ -4,10 +4,15 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import BrandEvidenceSection from '@/components/BrandEvidenceSection';
+import BrandDisclosure from '@/components/BrandDisclosure';
+import BrandInfoSection from '@/components/BrandInfoSection';
+import PendingTestImage from '@/components/PendingTestImage';
 import BrandPlansTable from '@/components/BrandPlansTable';
 import OfficialSiteSection from '@/components/OfficialSiteSection';
+import RelatedGuides from '@/components/RelatedGuides';
 import FavoriteButton from '@/components/account/FavoriteButton';
 import HistoryTracker from '@/components/account/HistoryTracker';
+import { getBrandMd } from '@/data/brandMd';
 import { getBrandTests } from '@/data/brandTests';
 import { getOfficialSite } from '@/data/officialSites';
 import JsonLd, { breadcrumbList } from '@/components/JsonLd';
@@ -17,6 +22,7 @@ import { getCouponsByBrandId } from '@/data/coupons';
 import { FEATURED_PICKS } from '@/data/featured';
 import { fmtYuan } from '@/data/format';
 import { getPlansByBrandId } from '@/data/packages';
+import { getRelatedGuidesForBrand } from '@/data/relatedGuides';
 import { buildPriceFactLines, buildPurchaseChecklist, getDeviceCaps, getPriceFacts } from '@/data/priceFacts';
 import { SITE_META } from '@/data/site';
 import { VERIFICATION } from '@/data/verification';
@@ -42,6 +48,12 @@ export async function generateStaticParams() {
   }));
 }
 
+/** 页面标题和 H1 同一句：品牌名 + 这家自己的入门月付，每页不一样 */
+function brandTitle(brandId: string, brandName: string): string {
+  const entry = getPriceFacts(brandId).entryMonthly;
+  return `${brandName}套餐价格与线路资料${entry ? `：入门月付 ${fmtYuan(entry.price)}` : ''}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const brand = getBrandById(slug);
@@ -53,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const hasOfficial = Boolean(getOfficialSite(brand.id));
 
   return buildMetadata({
-    title: `${brand.name}套餐与使用条件：购买前需要核对什么`,
+    title: brandTitle(brand.id, brand.name),
     description: `${brand.name}价格资料：${brand.selection_tip}价格由${VERIFICATION.label}，购买前请以结算页为准。${hasOfficial ? `页面附${brand.name}官网地址（站长提供）。` : ''}`,
     path: `/airports/${brand.id}/`
   });
@@ -75,6 +87,8 @@ export default async function AirportDetailPage({ params }: Props) {
   const featuredPick = FEATURED_PICKS.find((pick) => pick.brand_id === brand.id);
   const officialSite = getOfficialSite(brand.id);
   const deviceCaps = getDeviceCaps(facts);
+  const brandMd = getBrandMd(brand.id);
+  const relatedGuides = getRelatedGuidesForBrand(brand.id);
   const hasComparePage = brand.id === 'lingdongyun' || brand.id === 'twilight';
   const startingAmount = brand.starting_price?.amount ?? null;
 
@@ -107,10 +121,10 @@ export default async function AirportDetailPage({ params }: Props) {
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  {/* H1 与 <title> 同一个问题：品牌名大字，后半句小字，合起来是“{品牌}套餐与使用条件：购买前需要核对什么” */}
+                  {/* H1 与 <title> 同一句：品牌名大字，后半句小字，合起来是“{品牌}套餐价格与线路资料：入门月付 ¥N” */}
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-[#17233A] tracking-tight leading-tight">
                     {brand.name}
-                    <span className="block text-sm sm:text-base font-bold text-[#475569] tracking-normal mt-0.5">套餐与使用条件：购买前需要核对什么</span>
+                    <span className="block text-sm sm:text-base font-bold text-[#475569] tracking-normal mt-0.5">{brandTitle(brand.id, brand.name).slice(brand.name.length)}</span>
                   </h1>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#F0F5F9] text-[#4F64D6] border border-[#CBD5E1] font-semibold">
                     编辑推荐第 {brand.display_rank} 位
@@ -149,7 +163,7 @@ export default async function AirportDetailPage({ params }: Props) {
               <FavoriteButton type="airport" id={brand.id} />
             </div>
           </div>
-          <HistoryTracker type="airport" id={brand.id} title={`${brand.name}套餐与使用条件`} href={`/airports/${brand.id}/`} />
+          <HistoryTracker type="airport" id={brand.id} title={`${brand.name}套餐价格与线路资料`} href={`/airports/${brand.id}/`} />
 
           {/* Quick Meta Row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 text-xs">
@@ -197,16 +211,23 @@ export default async function AirportDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Data status */}
-          <div className="p-5 rounded-2xl border border-emerald-200 bg-emerald-50/50 space-y-1.5">
-            <div className="flex items-center gap-2 text-emerald-800 font-bold text-base">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>资料状态：已核验（{VERIFICATION.label}）</span>
+          {/* 统一的披露块：实测状态、资料引用、价格核验、商业合作（口径只在 BrandDisclosure 里改） */}
+          <BrandDisclosure brandName={brand.name} dataDate={facts.dataDate} testDate={tests[0]?.tested_at ?? null} />
+
+          {/* 站长的机场 MD 自己标注存疑的品牌：照 MD 写，并标“资料待核对”，站长确认后再去掉 */}
+          {brandMd.needs_check && (
+            <div id="needs-check" className="p-5 rounded-2xl border border-amber-300 bg-amber-50/70 space-y-1.5 scroll-mt-24">
+              <div className="flex items-center gap-2 text-amber-800 font-bold text-base">
+                <AlertTriangle className="w-5 h-5" />
+                <span>资料待核对</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
+                {brandMd.needs_check}。先照站长的机场资料写，相关数字请以结算页为准。
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
-              本页价格整理自 {brand.data_date} 的价格资料，由站长于 {VERIFICATION.verified_on} 在结算页核验；套餐之后仍可能调整，下单前以结算页为准。线路为资料标注；倍率、设备数、限速为站长核验的统一口径（1 倍率、不限设备、不限速）{deviceCaps.length > 0 ? `，但${deviceCaps.map((c) => c.name).join('、')}在套餐详情里标了设备数上限，见下方套餐表，以结算页为准` : ''}。{tests.length > 0 ? '延迟与解锁有站长提供的检测记录（见下方），下载速度和晚高峰未测试；' : '本站没有对速度、晚高峰和解锁做过测试；'}页面没有写到的项目都是未确认。
-            </p>
-          </div>
+          )}
+
+          <BrandInfoSection brandId={brand.id} brandName={brand.name} />
 
           {/* “怎么样”证据表和“官网是哪个”（站长指定的三家，有官网资料才写） */}
           {officialSite && (
@@ -245,7 +266,7 @@ export default async function AirportDetailPage({ params }: Props) {
                   <span key={item} className="px-2 py-0.5 rounded-full bg-[#F0F5F9] text-[#475569] border border-[#E2E8F0]">{item}</span>
                 ))}
               </div>
-              {test.image && (
+              {test.image ? (
                 <div className="space-y-1.5">
                   <Image
                     src={test.image.src}
@@ -258,10 +279,12 @@ export default async function AirportDetailPage({ params }: Props) {
                     查看原图 →
                   </a>
                 </div>
+              ) : (
+                <PendingTestImage />
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
                 <div className="space-y-1.5">
-                  <div className="font-bold text-[#17233A]">图中显示</div>
+                  <div className="font-bold text-[#17233A]">{test.image ? '图中显示' : '记录里显示'}</div>
                   <ul className="list-disc list-outside pl-4 space-y-1 text-[#475569]">
                     {test.findings.map((line) => <li key={line}>{line}</li>)}
                   </ul>
@@ -291,9 +314,10 @@ export default async function AirportDetailPage({ params }: Props) {
                   <code className="inline-block px-4 py-2 rounded-xl bg-[#F8FAFC] border border-[#CBD5E1] font-mono font-bold text-lg text-[#6378EA] select-all w-fit">
                     {coupon.coupon_code}
                   </code>
-                  <p className="text-xs text-[#64748B] leading-relaxed">
-                    {coupon.verification_note}在结算页的优惠码框输入后，以实际抵扣金额为准；推广链接里的 code= 参数不是优惠码。
-                  </p>
+                  <div className="text-xs text-[#64748B] leading-relaxed space-y-0.5">
+                    <p>{coupon.verification_note}</p>
+                    {(coupon.condition_notes ?? []).map((line) => <p key={line}>{line}</p>)}
+                  </div>
                 </div>
               ))}
             </section>
@@ -355,7 +379,7 @@ export default async function AirportDetailPage({ params }: Props) {
             </h2>
             <BrandPlansTable plans={plans} />
             <p className="text-[11px] text-[#94A3B8]">
-              注：实付金额需在付款时一次付清。每 GB 单价按标称流量计算，未考虑倍率；每月流量是否重置、能否结转，资料没有写明的以服务商说明为准。
+              注：实付金额需在付款时一次付清；每 GB 单价按标称流量计算，未考虑倍率。
               {officialSite && officialSite.price_check.differences.length > 0 && (
                 <> 官网页面与本表不同的地方，见上方<a href="#official" className="text-[#6378EA] font-semibold">官网介绍</a>，价格以结算页为准。</>
               )}
@@ -366,11 +390,20 @@ export default async function AirportDetailPage({ params }: Props) {
           <section id="entry" className="liquid-glass-card rounded-2xl p-6 border border-[#E2E8F0] space-y-3 scroll-mt-24">
             <h2 className="text-lg font-bold text-[#17233A] flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[#6378EA]" />
-              <span>四、注册入口怎样核对</span>
+              <span>四、注册入口</span>
             </h2>
-            <p className="text-xs sm:text-sm text-[#475569]">
-              本站（<code className="text-[#6378EA] font-semibold">jichang-tj.blog</code>）是选购博客，<strong>不是{brand.name}官方网站</strong>。页面上的注册入口是推广地址，链接里的 <code className="text-[#17233A] font-semibold">code=</code> 参数只用于识别推荐关系，不是折扣码。通过链接注册或购买，本站会获得服务商支付的佣金；你的购买价格与直接在官网购买相同，不会因此加价，优惠码在此基础上另外抵扣，实付以结算页为准。{officialSite && <>{brand.name}官网地址见上方<a href="#official" className="text-[#6378EA] hover:text-[#4F64D6] font-semibold">官网介绍</a>。</>}详见<Link href="/disclosure/" className="text-[#6378EA] hover:text-[#4F64D6] font-semibold">推广说明</Link>。
-            </p>
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <a
+                href={brand.affiliate_url}
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#F8FAFC] font-semibold text-[#6378EA] border border-[#CBD5E1] transition-colors"
+              >
+                <span>前往 {brand.name} 注册入口</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              {officialSite && <a href="#official" className="font-semibold text-[#6378EA] hover:text-[#4F64D6]">查看官网介绍 ↓</a>}
+            </div>
           </section>
 
           {/* Section 5：购买前的核对清单 */}
@@ -384,7 +417,12 @@ export default async function AirportDetailPage({ params }: Props) {
                 <li key={item}>{item}</li>
               ))}
             </ul>
+            <p className="text-xs">
+              <Link href="/guides/refund-and-purchase-checklist/" className="text-[#6378EA] font-semibold">购买前核对清单 →</Link>
+            </p>
           </section>
+
+          <RelatedGuides brandName={brand.name} guides={relatedGuides} />
 
           {hasComparePage && (
             <div className="p-4 rounded-xl bg-white border border-[#CBD5E1] flex items-center justify-between gap-3 text-xs">

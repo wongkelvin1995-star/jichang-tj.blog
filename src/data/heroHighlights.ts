@@ -22,7 +22,7 @@ const HERO_COPY: HeroHighlightCopy[] = [
   {
     brand_id: 'lingdongyun',
     headline: '附站长检测记录',
-    detail: (f) => `IEPL 专线 + BGP 入口（资料标注），${monthly(f.entryMonthly!)}，月付到三年付都有`
+    detail: (f) => `${f.lineNote}（资料标注），${monthly(f.entryMonthly!)}，月付到三年付都有`
   },
   {
     brand_id: 'twilight',
@@ -32,7 +32,7 @@ const HERO_COPY: HeroHighlightCopy[] = [
   {
     brand_id: 'breezenet',
     headline: '入门单价低',
-    detail: (f) => `${monthly(f.entryMonthly!)}，约 ${fmtPerGB(f.entryMonthly!.perGB)}/GB，年付约 8 折`
+    detail: (f) => `${monthly(f.entryMonthly!)}，约 ${fmtPerGB(f.entryMonthly!.perGB)}/GB，乘风、破风年付约 8 折`
   },
   {
     brand_id: 'flycat',
@@ -42,7 +42,7 @@ const HERO_COPY: HeroHighlightCopy[] = [
   {
     brand_id: 'dalaoyun',
     headline: '年付划算',
-    detail: (f) => `${monthly(f.entryMonthly!)}，凌云、御云两档年付约 79 折`
+    detail: (f) => `${monthly(f.entryMonthly!)}（入门套餐价格资料待核对），凌云、御云两档年付约 79 折`
   },
   {
     brand_id: 'invisible',
@@ -53,7 +53,7 @@ const HERO_COPY: HeroHighlightCopy[] = [
     brand_id: 'flyv',
     display_name: 'FLY V',
     headline: '多设备更省心',
-    detail: (f) => `${monthly(f.entryMonthly!)}，标注不限速、设备不限`
+    detail: (f) => `${monthly(f.entryMonthly!)}，常规周期套餐设备不限（资料标注）`
   },
   {
     brand_id: 'wavenet',

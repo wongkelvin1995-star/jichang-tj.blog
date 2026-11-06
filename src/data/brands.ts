@@ -96,8 +96,8 @@ const BRAND_REGISTRY: BrandRegistryEntry[] = [
   },
   {
     id: "firefly",
-    name: "飞为",
-    aliases: ["Firefly", "firefly"],
+    name: "Firefly",
+    aliases: ["飞为"],
     display_rank: 10,
     source_input_order: 27,
     fixed_position: true,
@@ -155,7 +155,7 @@ const BRAND_REGISTRY: BrandRegistryEntry[] = [
     display_rank: 16,
     source_input_order: 8,
     fixed_position: false,
-    affiliate_url: "https://vip05.xdmaffvip.com/#/?code=8OfXD5OF"
+    affiliate_url: "https://kfccbb.xingdaomeng.com/#/?code=8OfXD5OF"
   },
   {
     id: "lightspeed",

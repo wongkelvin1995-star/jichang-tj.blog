@@ -1,16 +1,15 @@
 import React from 'react';
 import { H2, P, Ul, Callout, Table, GuideLink } from '@/components/guide/Prose';
-import { COUPON_DISCOUNT_LABEL } from '@/data/coupons';
-import { BRAND_COUNT, DEVICE_CAP_EXCEPTION } from '@/data/guideStats';
-import { PLANS } from '@/data/packages';
+import { discountSummary } from '@/data/coupons';
+import { TERMS_STATS } from '@/data/brandTerms';
+import { BRAND_COUNT, DEVICE_RULES_SUMMARY, MULTIPLIER_RULES_SUMMARY } from '@/data/guideStats';
 
 export default function RefundAndPurchaseChecklist() {
-  const plansWithRefund = PLANS.filter((p) => p.refund_rule !== null).length;
 
   return (
     <>
       <P>
-        点支付之前，花三分钟把下面五项核对一遍。这是一份资料核对清单，不是法律意见；它能帮你避免的是“付了钱才发现规则不是想的那样”。本站 {BRAND_COUNT} 家的价格资料里，写明退款条款的套餐有 {plansWithRefund} 个，所以第二项你必须自己去服务条款里找。
+        点支付之前，花三分钟把下面五项核对一遍。这是一份资料核对清单，不是法律意见；它能帮你避免的是“付了钱才发现规则不是想的那样”。本站 {BRAND_COUNT} 家的资料里，写了退款说明的品牌有 {TERMS_STATS.refundStated} 家，其余没写，写了的也只是大意，所以第二项你必须自己去服务条款里找。
       </P>
 
       <H2 id="checklist">五项核对</H2>
@@ -19,7 +18,7 @@ export default function RefundAndPurchaseChecklist() {
         rows={[
           ['1', '实付金额与付款周期：结算页显示的金额是不是你以为的那个周期；优惠码输入后抵扣了多少', '结算页', '金额和页面标价对不上就不要付'],
           ['2', '退款条款：能不能退、多少天内、扣不扣手续费、按什么比例', '服务条款（ToS）或帮助页', '找不到就按不可退款准备，只买月付'],
-          ['3', '设备、倍率、限速：同时在线几台、有没有高倍率节点、有没有限速', '套餐页、节点列表、服务条款', `本站按站长核验的口径显示不限设备、1 倍率、不限速${DEVICE_CAP_EXCEPTION ? `（${DEVICE_CAP_EXCEPTION}）` : ''}，以服务商最新说明为准`],
+          ['3', '设备、倍率、限速：同时在线几台、有没有高倍率节点、有没有限速', '套餐页、节点列表、服务条款', `各家写法不同：倍率方面，${MULTIPLIER_RULES_SUMMARY}；设备数方面，${DEVICE_RULES_SUMMARY}；具体看各品牌页，以服务商最新说明为准`],
           ['4', '流量规则：每月额度还是总量、什么时候重置、能否结转、流量包有效期', '套餐页、帮助页', '没写明就问客服，问不到按当月清零准备'],
           ['5', '使用限制：禁止的用途（如滥用、垃圾邮件、BT）、违规处理方式', '服务条款', '条款模糊就默认限制存在']
         ]}
@@ -39,21 +38,21 @@ export default function RefundAndPurchaseChecklist() {
       <Ul
         items={[
           <>先选最短周期：第一次买只买月付，用一个月再决定长周期，长周期的风险见 <GuideLink href="/guides/billing-and-traffic-rules/">付款与流量规则</GuideLink>。</>,
-          <>输入优惠码后看实付：本站收录的优惠码为站长在结算页核验的 {COUPON_DISCOUNT_LABEL}，抵扣多少仍以结算页为准；推广链接里的 code= 参数不是优惠码。</>,
+          <>输入优惠码后看实付：本站收录的优惠码由站长在结算页核验，折扣各家不同（{discountSummary()}），抵扣多少仍以结算页为准；推广链接里的 code= 参数不是优惠码。</>,
           <>保留凭证：订单号、付款截图、当时的套餐页截图。退款和纠纷都靠它。</>
         ]}
       />
 
       <H2 id="devices">设备数的两种口径</H2>
       <P>
-        “几台设备”在不同服务商那里可能指不同东西：有的按同时在线的连接数算，有的按公网 IP 数算，一个家庭路由器后面的所有设备可能只算一个。条款里写“不限设备”也要看有没有“合理使用”限制。本站按站长口径显示不限设备{DEVICE_CAP_EXCEPTION ? `（${DEVICE_CAP_EXCEPTION}）` : ''}，但建议把你的使用场景（几台、是否共用路由器）直接问一遍客服。
+        “几台设备”在不同服务商那里可能指不同东西：有的按同时在线的连接数算，有的按公网 IP 数算，一个家庭路由器后面的所有设备可能只算一个。条款里写“不限设备”也要看有没有“合理使用”限制。站长提供的资料里，{DEVICE_RULES_SUMMARY}，但建议把你的使用场景（几台、是否共用路由器）直接问一遍客服。
       </P>
 
       <H2 id="after-payment">付款后当天要做的三件事</H2>
       <Ul
         items={[
           '核对订单：套餐名称、付款周期、实付金额和到期时间，与结算页上看到的一致；不一致马上联系客服并保留截图。',
-          '导入订阅并连一次：确认客户端能拿到节点、至少一个节点能正常使用，别等到要用时才发现问题，那时可能已经过了退款或申诉的期限。',
+          '用官方客户端登录并连一次：确认能拿到节点、至少一个节点能正常使用，别等到要用时才发现问题，那时可能已经过了退款或申诉的期限。',
           '记下用量起点：在后台记下当时的已用流量和重置日期，之后核对流量扣减是否符合预期。'
         ]}
       />

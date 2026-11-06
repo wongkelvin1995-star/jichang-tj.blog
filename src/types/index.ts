@@ -102,6 +102,8 @@ export interface Coupon {
   renewal_eligible: boolean | null;
   discount_type: 'percentage' | 'fixed_amount' | 'unknown' | null;
   discount_value: number | string | null;
+  /** 适用、不适用的套餐和使用限制，照 MD 的写法，没写就是空数组 */
+  condition_notes?: string[];
   minimum_order_amount: number | null;
   start_at: string | null;
   end_at: string | null;
@@ -113,8 +115,17 @@ export interface Coupon {
   verified_at: string | null;
 }
 
+/** 文章分类：新手教程、客户端教程、网络故障排查、线路知识、测速实验室、机场选购（见 src/data/categories.ts） */
+export type ArticleCategoryId = 'beginner' | 'clients' | 'troubleshooting' | 'routes' | 'speed-lab' | 'buying';
+
 export interface ArticleBrief {
   slug: string;
+  /** 所属分类，决定文章页的面包屑、页头说明和分类页里的位置 */
+  category: ArticleCategoryId;
+  /** 一句话摘要（卡片和列表用，不超过 60 个汉字），和 meta description 是两回事 */
+  summary: string;
+  /** 页面的 meta description；不写就用“核心问题 + 结论范围”拼出来（现有 10 篇） */
+  meta_description?: string;
   priority: 'P0' | 'P1' | 'P2';
   title: string;
   primary_question: string;
@@ -137,8 +148,10 @@ export interface FAQItem {
   id: string;
   question: string;
   answer: string;
-  category: 'selection' | 'billing' | 'traffic' | 'client' | 'transparency';
+  category: 'selection' | 'billing' | 'traffic' | 'client' | 'transparency' | 'troubleshooting' | 'beginner';
   editorial_reference?: string;
+  /** 回答下面显示的相关教程链接（不进 FAQPage 结构化数据） */
+  related?: { label: string; href: string };
 }
 
 export interface SiteMeta {

@@ -1,7 +1,8 @@
+import { VERIFICATION } from '@/data/verification';
 import React from 'react';
 import { H2, P, Ul, Callout, Table, BrandLink, GuideLink, Faq } from '@/components/guide/Prose';
 import { fmtPerGB, fmtYuan } from '@/data/format';
-import { CHEAPEST_PACK, CHEAPEST_YEARLY, ENTRY_MONTHLY } from '@/data/guideStats';
+import { ALL_ROWS, CHEAPEST_PACK, CHEAPEST_YEARLY, ENTRY_MONTHLY } from '@/data/guideStats';
 import { getPriceFacts } from '@/data/priceFacts';
 
 export default function OccasionalUse() {
@@ -10,6 +11,9 @@ export default function OccasionalUse() {
   const packLow = CHEAPEST_PACK.slice(0, 3);
   const bestYearly = CHEAPEST_YEARLY[0];
   const bestPack = CHEAPEST_PACK[0];
+  const packRows = ALL_ROWS.filter((r) => r.cycle === 'o');
+  const noExpireCount = packRows.filter((r) => r.note?.includes('流量不过期')).length;
+  const fixedTermCount = packRows.filter((r) => r.note?.includes('有效期')).length;
   const monthsUsed = [1, 2, 3, 6, 12];
   const cheapestForOneMonth = ([['按月买', monthlyLow.price], ['年付小包', bestYearly.price], ['一次性包', bestPack.price]] as Array<[string, number]>).sort((a, b) => a[1] - b[1])[0][0];
 
@@ -47,8 +51,8 @@ export default function OccasionalUse() {
       <H2 id="validity">一次性流量包先看有效期</H2>
       <Ul
         items={[
-          `价格表里有的包标注永久有效（如 FLY V 单次轻量版），有的标注购买后 365 天内有效（如环球云 ${getPriceFacts('huanqiuyun').packs[0].name}），有的注明以结算页为准。`,
-          '标注“永久”的，也要在服务条款里确认账号长期不登录会不会被清理。',
+          `价格表里 ${packRows.length} 个一次性包中，${noExpireCount} 个写了流量不过期（如 FLY V 单次轻量版），${fixedTermCount} 个写了固定有效期（如环球云 ${getPriceFacts('huanqiuyun').packs[0].name}，有效期 365 天），其余没有写明有效期。`,
+          '写了“流量不过期”或“永久”的，也要在服务条款里确认账号长期不登录会不会被清理。',
           '流量包没有月度重置，所以也不存在“当月浪费”；它的浪费只发生在过期或账号失效时。'
         ]}
       />
@@ -71,7 +75,7 @@ export default function OccasionalUse() {
           },
           {
             q: '一次性流量包会过期吗？',
-            a: '要看各家的写法：有的写永久有效，有的写购买后 365 天内有效，也有的没写。付款前到结算页或服务条款确认，没写明的不要当作永久有效。'
+            a: `要看各家的写法：价格表里 ${packRows.length} 个一次性包中，${noExpireCount} 个写了流量不过期，${fixedTermCount} 个写了固定有效期（如环球云的包写有效期 365 天），其余没有写。付款前到结算页或服务条款确认，没写明的不要当作永久有效。`
           },
           {
             q: '年付小包每个月的额度用不完怎么办？',
@@ -81,7 +85,7 @@ export default function OccasionalUse() {
       />
 
       <Callout title="本文的边界" tone="warn">
-        以上按价格表的最低价计算，价格由站长核验于 2026-11-03，之后仍可能调整。流量包是否真的不按月清零、有效期多长，以各家服务条款为准。周期术语见 <GuideLink href="/guides/billing-and-traffic-rules/">付款与流量规则</GuideLink>。
+        以上按价格表的最低价计算，价格由{VERIFICATION.label}，之后仍可能调整。流量包是否真的不按月清零、有效期多长，以各家服务条款为准。周期术语见 <GuideLink href="/guides/billing-and-traffic-rules/">付款与流量规则</GuideLink>。
       </Callout>
     </>
   );

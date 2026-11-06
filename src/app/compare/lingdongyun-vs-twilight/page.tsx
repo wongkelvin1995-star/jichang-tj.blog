@@ -7,7 +7,9 @@ import { getCouponsByBrandId } from '@/data/coupons';
 import { fmtPerGB, fmtYuan } from '@/data/format';
 import type { CycleCode } from '@/data/planPrices';
 import { CYCLE_LABELS, getPriceFacts, type BrandPriceFacts, type PriceRef } from '@/data/priceFacts';
+import { getBrandTerms } from '@/data/brandTerms';
 import { SITE_META } from '@/data/site';
+import { VERIFICATION } from '@/data/verification';
 import { buildMetadata } from '@/lib/metadata';
 import {
   GitCompare,
@@ -22,13 +24,13 @@ import {
 
 export const metadata: Metadata = buildMetadata({
   title: '灵动云与暮光：按相同条件比较套餐与规则',
-  description: '对照灵动云与暮光加速的档位价格、付款周期、流量包与线路标注。清楚披露商业推广合作，价格由站长核验于 2026-11-03。',
+  description: `对照灵动云与暮光加速的档位价格、付款周期、流量包与线路标注。清楚披露商业推广合作，价格由${VERIFICATION.label}。`,
   path: '/compare/lingdongyun-vs-twilight/'
 });
 
 const TIERS = [
   { label: '入门档', lingdong: '拂风', twilight: '基础版' },
-  { label: '300GB 档', lingdong: '驭浪', twilight: '标准版' },
+  { label: '二档', lingdong: '驭浪', twilight: '标准版' },
   { label: '700GB 档', lingdong: '破晓', twilight: '旗舰版' },
   { label: '1500GB 档', lingdong: '凌霄', twilight: '至尊版' },
 ];
@@ -72,11 +74,14 @@ export default function CompareLingdongyunVsTwilightPage() {
   const standardYearly = pick(twilightFacts, '标准版', 'y');
   const chuanyun = lingdongFacts.cheapestYearly!;
   const lightYearly = twilightFacts.cheapestYearly!;
+  const lingdongTerms = getBrandTerms('lingdongyun');
+  const twilightTerms = getBrandTerms('twilight');
+  const termsCell = (t: ReturnType<typeof getBrandTerms>) => `倍率：${t.multiplier ?? '资料未提供'}；设备：${t.devices ?? '资料未提供'}；限速：${t.speed ?? '资料未提供'}`;
   const lingdongCoupon = getCouponsByBrandId('lingdongyun')[0];
   const twilightCoupon = getCouponsByBrandId('twilight')[0];
   const couponCell = (coupon?: { coupon_code: string | null; discount_value: number | string | null }) =>
     coupon?.coupon_code
-      ? `优惠码 ${coupon.coupon_code}（${coupon.discount_value ?? '折扣幅度未提供'}，站长核验于 2026-11-03）`
+      ? `优惠码 ${coupon.coupon_code}（${coupon.discount_value ?? '折扣幅度资料未写'}，${VERIFICATION.label}）`
       : '暂无已核实优惠码';
 
   return (
@@ -104,7 +109,7 @@ export default function CompareLingdongyunVsTwilightPage() {
               <GitCompare className="w-3.5 h-3.5" />
               <span>双品牌横向对比 · 同口径计算</span>
             </span>
-            <span className="text-[#94A3B8]">价格资料日：灵动云 {lingdong.data_date} / 暮光加速 {twilight.data_date} · 站长核验于 2026-11-03</span>
+            <span className="text-[#94A3B8]">价格资料日：灵动云 {lingdong.data_date} / 暮光加速 {twilight.data_date} · {VERIFICATION.label}</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#17233A] tracking-tight leading-tight">
@@ -120,7 +125,7 @@ export default function CompareLingdongyunVsTwilightPage() {
             <div>
               <strong className="text-[#17233A]">商业合作与对比准则披露：</strong>
               <span>
-                灵动云（推荐位第 1 位）与暮光加速（推荐位第 2 位）均含本站推广合作。以下对照只依据本站价格表计算，价格由站长核验于 2026-11-03；本站没有做过测速。实际支付前请在各自结算页核实最新资费。
+                灵动云（推荐位第 1 位）与暮光加速（推荐位第 2 位）均含本站推广合作。以下对照只依据本站价格表计算，价格由{VERIFICATION.label}；本站没有做过测速。实际支付前请在各自结算页核实最新资费。
               </span>
             </div>
           </div>
@@ -149,7 +154,7 @@ export default function CompareLingdongyunVsTwilightPage() {
             </div>
 
             <p className="text-xs text-[#64748B] leading-relaxed">
-              {lingdongFacts.mainMonthly.length} 个主力月付档，月付到三年付各个周期和一次性流量包都有。资料标注 {lingdongFacts.lineNote}，主力档不限速、1 倍率。
+              {lingdongFacts.mainMonthly.length} 个主力月付档，月付到三年付各个周期和一次性流量包都有。资料标注 {lingdongFacts.lineNote}；倍率：{lingdongTerms.multiplier ?? '资料未提供'}，限速：{lingdongTerms.speed ?? '资料未提供'}。
             </p>
 
             <div className="pt-2 flex items-center justify-between gap-2 text-xs">
@@ -189,7 +194,7 @@ export default function CompareLingdongyunVsTwilightPage() {
             </div>
 
             <p className="text-xs text-[#64748B] leading-relaxed">
-              {twilightFacts.mainMonthly.length} 个主力月付档，入门 {fmtYuan(basic.price)} 含 {basic.totalGB}GB，300GB 档 {fmtYuan(standard.price)} 低于灵动云同档。资料标注 {twilightFacts.lineNote}。
+              {twilightFacts.mainMonthly.length} 个主力月付档，入门 {fmtYuan(basic.price)} 含 {basic.totalGB}GB，二档标准版 {fmtYuan(standard.price)} 含 {standard.totalGB}GB（灵动云驭浪 {fmtYuan(yulang.price)} 含 {yulang.totalGB}GB）。资料标注 {twilightFacts.lineNote}。
             </p>
 
             <div className="pt-2 flex items-center justify-between gap-2 text-xs">
@@ -218,7 +223,7 @@ export default function CompareLingdongyunVsTwilightPage() {
             <span>核心维度同口径参数对照表</span>
           </h2>
           <p className="text-xs text-[#64748B]">
-            以下数字来自本站价格表（站长核验于 2026-11-03）；资料没有写明的项目标为“未标注”，不作推断：
+            以下数字来自本站价格表（{VERIFICATION.label}）；资料没有写明的项目标为“资料未提供”，不作推断：
           </p>
 
           <div className="overflow-x-auto">
@@ -260,8 +265,8 @@ export default function CompareLingdongyunVsTwilightPage() {
                 </tr>
                 <tr>
                   <td className="py-3.5 px-3 font-semibold text-[#17233A]">倍率 / 设备 / 限速</td>
-                  <td className="py-3.5 px-3 text-[#475569]">1 倍率、不限设备、不限速（站长核验的统一口径）</td>
-                  <td className="py-3.5 px-3 text-[#475569]">1 倍率、不限设备、不限速（站长核验的统一口径）</td>
+                  <td className="py-3.5 px-3 text-[#475569]">{termsCell(lingdongTerms)}</td>
+                  <td className="py-3.5 px-3 text-[#475569]">{termsCell(twilightTerms)}</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-3 font-semibold text-[#17233A]">优惠码</td>
@@ -288,7 +293,7 @@ export default function CompareLingdongyunVsTwilightPage() {
               <div className="font-bold text-[#6378EA]">适合优先考虑灵动云的情况：</div>
               <p>
                 1. 想把预付周期拉到两年或三年：灵动云有两年付、三年付（站长确认结算页提供，官网价格说明页只写到年付，以结算页为准），暮光的资料只到年付；<br />
-                2. 更看重线路标注明确：灵动云标注 IEPL 专线并带 BGP 入口，暮光未注明 IEPL 或 IPLC；<br />
+                2. 想要 IEPL 专线：灵动云的资料写 {lingdongFacts.lineNote}，暮光写 {twilightFacts.lineNote}，按你需要的线路类型选；<br />
                 3. 轻度使用：最低年付 {fmtYuan(chuanyun.price)} 比暮光的 {fmtYuan(lightYearly.price)} 低，每月流量同为 {chuanyun.monthlyGB}GB；一次性流量包同容量也更便宜。
               </p>
             </div>
@@ -297,8 +302,7 @@ export default function CompareLingdongyunVsTwilightPage() {
               <div className="font-bold text-[#17233A]">适合优先考虑暮光加速的情况：</div>
               <p>
                 1. 只买入门月付：同样 {fmtYuan(basic.price)}，暮光每月 {basic.totalGB}GB，灵动云每月 {fufeng.totalGB}GB；<br />
-                2. 每月用 300GB 左右：标准版月付 {fmtYuan(standard.price)}、年付 {fmtYuan(standardYearly.price)}，低于驭浪的 {fmtYuan(yulang.price)} 和 {fmtYuan(yulangYearly.price)}；<br />
-                3. 一次性流量包容量更多样：三档分别为 150GB、400GB、800GB，与灵动云相同，但每档价格高 ¥20–60，这一项反而是灵动云更便宜。
+                2. 每月 {standard.totalGB}GB 够用：标准版月付 {fmtYuan(standard.price)}、年付 {fmtYuan(standardYearly.price)}，比驭浪的 {fmtYuan(yulang.price)} 和 {fmtYuan(yulangYearly.price)} 便宜，但每月流量也少 {yulang.totalGB - standard.totalGB}GB，每 GB 单价相近（{fmtPerGB(standard.perGB)} 对 {fmtPerGB(yulang.perGB)}）。
               </p>
             </div>
 
@@ -320,7 +324,7 @@ export default function CompareLingdongyunVsTwilightPage() {
           <ul className="list-disc list-inside space-y-1.5">
             <li><strong>首月优先月付：</strong>无论灵动还是暮光，在确认本地运营商（电信/联通/移动）晚高峰表现满意前，切勿冲动购买大金额年付；</li>
             <li><strong>核实结算实付：</strong>双方推广链接中的 <code className="text-[#17233A] font-semibold">?code=xxxx</code> 均为邀请代码，不自动抵扣金额，实付以订单最终提示为准；</li>
-            <li><strong>查验退款政策：</strong>两家的资料都没有写明退款规则，购买前请查阅各自的用户服务协议（ToS），确认是否支持退款及具体手续费限制。</li>
+            <li><strong>查验退款政策：</strong>灵动云的资料写“{lingdongTerms.refund ?? '未提供'}”，暮光写“{twilightTerms.refund ?? '未提供'}”，具体条件和手续费限制，购买前请查阅各自的用户服务协议（ToS）确认。</li>
           </ul>
         </section>
 

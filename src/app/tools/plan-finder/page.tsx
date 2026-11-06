@@ -54,7 +54,7 @@ export default function PlanFinderPage() {
           <h2 className="text-base font-bold text-[#17233A]">它是怎么算的</h2>
           <ul className="list-disc list-outside pl-5 space-y-1.5">
             <li>只保留“每月发放额度 ≥ 你填的用量”的月付和年付档；年付按每月额度匹配，但实付是一次付清的整年费用。</li>
-            <li>每 GB 单价 = 实付金额 ÷ 周期总流量，按标称流量和本站口径的 1 倍率计算，排序只看这一项，不看品牌排名。</li>
+            <li>每 GB 单价 = 实付金额 ÷ 周期总流量，按标称流量计算、不按倍率折算，排序只看这一项，不看品牌排名。</li>
             <li>“折合月价”只用于比较，不是每月支出；预算留空表示不限制。</li>
             <li>不含一次性流量包（不按月重置，适合低频备用）和独享定制线路（月付 500 元以上）。</li>
           </ul>

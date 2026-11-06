@@ -6,7 +6,7 @@ export const SITE_META: SiteMeta = {
   title: "2026机场推荐｜高性价比套餐对比与新手选购指南",
   description: "2026机场推荐与选购指南，整理多家机场的套餐价格、流量额度、线路说明和设备限制，结合低预算、大流量、多设备及AI与流媒体使用需求，帮助你比较不同方案，并了解购买前需要核对的事项。",
   canonical: "https://jichang-tj.blog",
-  prepared_on: "2026-11-03",
+  prepared_on: "2026-11-06",
   featured_brand_id: "lingdongyun",
   brand_count: 34,
   fixed_editorial_positions: 14,
@@ -33,9 +33,10 @@ export const ACCOUNT_LINK: { href: string; label: string } = {
 export const NAV_LINKS = [
   { label: "首页推荐", href: "/" },
   { label: "34家完整目录", href: "/airports/" },
-  { label: "套餐价格对比", href: "/#plans" },
+  { label: "套餐价格对比", href: "/plans/" },
   { label: "核验优惠", href: "/deals/" },
-  { label: "选购指南", href: "/#guides" },
+  { label: "指南教程", href: "/guides/" },
+  { label: "测速实验室", href: "/speed-lab/" },
   { label: "编辑准则", href: "/editorial-policy/" },
   { label: "推广说明", href: "/disclosure/" },
   { label: "关于本站", href: "/about/" }

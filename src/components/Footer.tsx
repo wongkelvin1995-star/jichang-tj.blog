@@ -1,19 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
-import { ARTICLES } from '@/data/articles';
-import { BRANDS } from '@/data/brands';
+import { ARTICLE_CATEGORIES, getArticlesByCategory } from '@/data/categories';
 import { SITE_META } from '@/data/site';
 import { VERIFICATION } from '@/data/verification';
-import { ShieldCheck, Info, Compass, BookOpen, Building2, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Info, Compass, BookOpen, CheckCircle2 } from 'lucide-react';
 
 const CORE_LINKS = [
   { label: '首页推荐', href: '/' },
   { label: `${SITE_META.brand_count} 家完整目录`, href: '/airports/' },
-  { label: '套餐价格对比', href: '/#plans' },
+  { label: '套餐价格对比', href: '/plans/' },
   { label: '优惠码汇总', href: '/deals/' },
   { label: '灵动云 vs 暮光加速对比', href: '/compare/lingdongyun-vs-twilight/' },
   { label: '每 GB 成本计算器', href: '/tools/cost-per-gb/' },
   { label: '套餐匹配器', href: '/tools/plan-finder/' },
+  { label: '测速实验室', href: '/speed-lab/' },
 ];
 
 const POLICY_LINKS = [
@@ -22,12 +22,9 @@ const POLICY_LINKS = [
   { label: '关于本站与作者声明', href: '/about/' },
 ];
 
-/** 指南标题取冒号前的短句，页脚放得下 */
-const shortTitle = (title: string) => title.split(/[：，]/)[0];
-
+/** 页脚四栏：简介与披露、核心栏目、指南分类、事实核验与准则。“固定推荐 14 家”一栏已按站长 2026-11-06 的要求删掉，品牌入口在首页目录和“34 家完整目录”；指南多了以后只列分类，具体文章从分类页进。 */
 export default function Footer() {
-  const guides = ARTICLES.filter((a) => a.published_at !== null);
-  const fixedBrands = BRANDS.filter((b) => b.fixed_position);
+  const categories = ARTICLE_CATEGORIES.map((c) => ({ ...c, count: getArticlesByCategory(c.id).length })).filter((c) => c.count > 0);
   const contactEmail = SITE_META.correction_contact.split('（')[0];
 
   return (
@@ -35,7 +32,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 mb-10">
           {/* Col 1: Identity & Purpose */}
-          <div className="md:col-span-2 lg:col-span-4 space-y-4">
+          <div className="md:col-span-2 lg:col-span-5 space-y-4">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-[#17233A] tracking-tight">{SITE_META.name}</span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#F0F5F9] text-[#6378EA] border border-[#CBD5E1] font-semibold">
@@ -57,7 +54,7 @@ export default function Footer() {
             <div className="flex items-start gap-2 text-xs text-[#64748B] leading-relaxed">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                价格、倍率与设备口径、{SITE_META.brand_count} 个优惠码：{VERIFICATION.label}。套餐价格或订阅规则如有变动，以官方页面为准。
+                价格、{SITE_META.brand_count} 个优惠码：{VERIFICATION.label}；线路、倍率、设备等资料照站长提供的机场资料。套餐价格或订阅规则如有变动，以官方页面为准。
               </span>
             </div>
           </div>
@@ -85,46 +82,28 @@ export default function Footer() {
           </div>
 
           {/* Col 3: Guides */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <h3 className="text-sm font-bold text-[#17233A] mb-3 flex items-center gap-1.5">
               <BookOpen className="w-4 h-4 text-[#6378EA]" />
-              <span>选购指南</span>
+              <span>指南与教程</span>
             </h3>
             <ul className="space-y-2 text-sm text-[#64748B]">
-              {guides.map((article) => (
-                <li key={article.slug}>
-                  <Link href={`/guides/${article.slug}/`} className="hover:text-[#6378EA] transition-colors">
-                    {shortTitle(article.title)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 4: Fixed-position brands */}
-          <div className="lg:col-span-2">
-            <h3 className="text-sm font-bold text-[#17233A] mb-3 flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-[#6378EA]" />
-              <span>固定推荐 {fixedBrands.length} 家</span>
-            </h3>
-            <ul className="space-y-2 text-sm text-[#64748B]">
-              {fixedBrands.map((brand) => (
-                <li key={brand.id} className="flex items-center gap-2">
-                  <span className="w-5 text-[11px] font-semibold text-[#94A3B8] tabular-nums">{brand.display_rank}.</span>
-                  <Link href={`/airports/${brand.id}/`} className="hover:text-[#6378EA] transition-colors">
-                    {brand.name}
+              {categories.map((c) => (
+                <li key={c.id}>
+                  <Link href={c.href} className="hover:text-[#6378EA] transition-colors">
+                    {c.name}（{c.count}）
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href="/airports/" className="text-xs font-semibold text-[#6378EA] hover:text-[#4F64D6] transition-colors">
-                  查看全部 {SITE_META.brand_count} 家 →
+                <Link href="/guides/" className="text-xs font-semibold text-[#6378EA] hover:text-[#4F64D6] transition-colors">
+                  全部指南 →
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 5: Editorial & Trust */}
+          {/* Col 4: Editorial & Trust */}
           <div className="lg:col-span-2">
             <h3 className="text-sm font-bold text-[#17233A] mb-3 flex items-center gap-1.5">
               <Info className="w-4 h-4 text-[#6378EA]" />

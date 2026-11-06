@@ -1,25 +1,24 @@
 import React from 'react';
 import Link from 'next/link';
-import CouponTable from '@/components/CouponTable';
-import { COUPONS, COUPON_DISCOUNT_LABEL } from '@/data/coupons';
+import DealsQuickLookup from '@/components/DealsQuickLookup';
+import { COUPONS, COUPONS_PROVIDED_ON, discountSummary } from '@/data/coupons';
+import { buildCouponQuickItems } from '@/data/directory';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
 
+/** 首页的优惠码速查（紧凑 + 搜索）；完整的优惠码表、适用与不适用的套餐在 /deals/ */
 export default function VerifiedDealsSection() {
   return (
-    <section id="deals" className="py-16 scroll-mt-16">
+    <section id="deals" className="py-12 scroll-mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#6378EA] mb-2 px-3 py-1 rounded-full bg-[#F0F5F9] border border-[#CBD5E1]/60">
-              STEP 4 · 优惠码
-            </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#17233A] tracking-tight">
-              使用优惠前，先核对适用条件
+              优惠码速查
             </h2>
-            <p className="text-sm text-[#64748B] mt-2 max-w-2xl leading-relaxed">
-              以下 {COUPONS.length} 家的优惠码及 {COUPON_DISCOUNT_LABEL} 的折扣幅度由站长于 2026-11-03 在结算页核验；适用套餐、首购/续费条件和有效期以结算页实际抵扣为准，本站不编造“限时仅剩2小时”之类的倒计时。推广链接里的邀请代码和优惠码是两回事。
+            <p className="text-sm text-[#64748B] mt-2 max-w-3xl leading-relaxed">
+              {COUPONS.length} 家的优惠码由站长于 {COUPONS_PROVIDED_ON} 在结算页核验，折扣幅度各家不同（{discountSummary()}）。使用前先看适用与不适用的套餐，首购/续费条件和有效期以结算页实际抵扣为准；本站不编造“限时仅剩2小时”之类的倒计时。
             </p>
           </div>
 
@@ -43,7 +42,7 @@ export default function VerifiedDealsSection() {
             </div>
           </div>
         ) : (
-          <CouponTable compact />
+          <DealsQuickLookup items={buildCouponQuickItems()} verifiedOn={COUPONS_PROVIDED_ON} />
         )}
 
       </div>
