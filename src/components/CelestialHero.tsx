@@ -90,7 +90,7 @@ export default function CelestialHero() {
             {/* Transparency Note */}
             <div className="flex items-center gap-2 text-xs text-[#64748B] pt-2">
               <ShieldCheck className="w-4 h-4 text-[#6378EA] shrink-0" />
-              <span>本站推荐位含推广合作，前 {SITE_META.fixed_editorial_positions} 位为固定编辑推荐顺序，详见准则与披露。</span>
+              <span>本站推荐位含推广合作，详见准则与披露。</span>
             </div>
           </div>
 
